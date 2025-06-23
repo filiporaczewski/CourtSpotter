@@ -1,4 +1,6 @@
-﻿namespace PadelCourts.Core.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace PadelCourts.Core.Models;
 
 public class CourtAvailability
 {
@@ -10,6 +12,7 @@ public class CourtAvailability
 
     public string CourtName { get; set; }
     
+    [JsonPropertyName("type")]
     public CourtType Type { get; set; } = CourtType.Indoor;
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
@@ -22,5 +25,6 @@ public class CourtAvailability
 
     public string? BookingUrl { get; set; }
     
+    [JsonPropertyName("provider")]
     public ProviderType Provider { get; set; }
 }
