@@ -1,0 +1,12 @@
+﻿using PadelCourts.Core.Models;
+
+namespace PadelCourts.Core.Contracts;
+
+public interface IPlaytomicCourtsRepository
+{
+    Task<IEnumerable<PlaytomicCourt>> GetPlaytomicCourts(CancellationToken cancellationToken = default);
+    
+    Task<IEnumerable<PlaytomicCourt>> GetPlaytomicCourtsByClubId(string clubId, CancellationToken cancellationToken = default);
+    
+    Task AddPlaytomicCourt(PlaytomicCourt court, CancellationToken cancellationToken = default);
+}

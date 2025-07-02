@@ -7,11 +7,11 @@ export class BookingDurationPipe implements PipeTransform {
   transform(value: number): string {
     switch (value) {
       case 60:
-        return '1 hour'
+        return '1h'
       case 90:
-        return '1.5 hours'
+        return '1.5h'
       case 120:
-        return '2 hours'
+        return '2h'
       default:
         return `${value} mins`
     }

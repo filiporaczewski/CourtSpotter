@@ -2,10 +2,10 @@
 
 namespace PadelCourts.Core.Contracts;
 
-public interface ICourtProvider
+public interface ICourtBookingProvider
 {
-    Task<IEnumerable<CourtAvailability>> GetCourtAvailabilities(
-        Club club,
+    Task<IEnumerable<CourtAvailability>> GetCourtBookingAvailabilitiesAsync(
+        PadelClub padelClub,
         DateTime startDate,
         DateTime endDate,
         CancellationToken cancellationToken = default

@@ -8,8 +8,7 @@ import {PadelCourtsDashboardComponent} from './components/padel-courts-dashboard
   template: `
     <app-padel-courts-dashboard />
     <router-outlet />
-  `,
-  styleUrl: './app.component.scss',
+  `
 })
 export class AppComponent {
   title = 'PadelCourtsSpa';

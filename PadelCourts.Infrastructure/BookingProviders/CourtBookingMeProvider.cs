@@ -3,10 +3,10 @@ using PadelCourts.Core.Models;
 
 namespace PadelCourts.Infrastructure.BookingProviders;
 
-public class KlubyOrgProvider : ICourtProvider
+public class CourtBookingMeProvider : ICourtBookingProvider
 {
-    public async Task<IEnumerable<CourtAvailability>> GetCourtAvailabilities(
-        Club club, 
+    public async Task<IEnumerable<CourtAvailability>> GetCourtBookingAvailabilitiesAsync(
+        PadelClub padelClub, 
         DateTime startDate, 
         DateTime endDate, 
         CancellationToken cancellationToken = default)
@@ -14,17 +14,17 @@ public class KlubyOrgProvider : ICourtProvider
         await MockCourtDataGenerator.SimulateApiDelay();
         
         return MockCourtDataGenerator.GenerateAvailabilities(
-            club,
+            padelClub,
             startDate,
             endDate,
-            startHour: 8,
-            endHour: 21,
-            skipProbability: 0.4,
+            startHour: 6,
+            endHour: 23,
+            skipProbability: 0.2,
             currency: "PLN",
-            courtName: "Kort 2",
-            bookingUrl: "https://kluby.org/rezerwacje", 
-            basePrice: 60m,
-            provider: club.Provider
+            courtName: "Kort A",
+            bookingUrl: "https://court.me/reservation",
+            basePrice: 80m,
+            provider: padelClub.Provider
         );
     }
 }

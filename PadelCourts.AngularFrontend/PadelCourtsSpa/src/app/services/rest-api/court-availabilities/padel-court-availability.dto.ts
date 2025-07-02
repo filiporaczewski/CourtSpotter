@@ -1,3 +1,5 @@
+import {CourtType} from '../../../models/court-type';
+
 export interface PadelCourtAvailabilityDto {
   id: string;
   clubName: string;
@@ -8,4 +10,5 @@ export interface PadelCourtAvailabilityDto {
   bookingUrl: string;
   provider: string;
   durationInMinutes: number;
+  courtType: CourtType
 }

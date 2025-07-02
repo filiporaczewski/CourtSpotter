@@ -1,4 +1,4 @@
-import {Component, input} from '@angular/core';
+import {Component, computed, input, signal} from '@angular/core';
 import {CourtAvailabilityGridColumn} from '../models/CourtAvailabilityGridModels';
 import {CourtAvailabilityGridClubComponent} from './court-availability-grid-club.component';
 
@@ -9,7 +9,7 @@ import {CourtAvailabilityGridClubComponent} from './court-availability-grid-club
   ],
   template: `
     <section class="availability-column">
-      @for (club of column().gridClubs; track club.clubName) {
+      @for (club of column().gridClubs; track $index) {
         <app-court-availability-grid-club [club]="club" />
       }
     </section>

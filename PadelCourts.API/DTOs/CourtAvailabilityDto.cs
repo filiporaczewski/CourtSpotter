@@ -1,4 +1,6 @@
-﻿namespace WebApplication1.DTOs;
+﻿using PadelCourts.Core.Models;
+
+namespace WebApplication1.DTOs;
 
 public record CourtAvailabilityDto(
     string Id,
@@ -9,5 +11,6 @@ public record CourtAvailabilityDto(
     string Currency,
     string BookingUrl,
     string Provider,
-    int DurationInMinutes
+    int DurationInMinutes,
+    CourtType CourtType
 );

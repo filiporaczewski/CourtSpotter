@@ -1,4 +1,4 @@
-import {Component, input} from '@angular/core';
+import {Component, computed, input, signal} from '@angular/core';
 import {CourtAvailabilityGridClub} from '../models/CourtAvailabilityGridModels';
 import {GridCourtAvailabilityComponent} from './grid-court-availability.component';
 
@@ -8,10 +8,33 @@ import {GridCourtAvailabilityComponent} from './grid-court-availability.componen
     GridCourtAvailabilityComponent
   ],
   template: `
-    <div class="">
-      <h4 class="text-xl font-bold text-white whitespace-nowrap mb-2">{{club().clubName}}</h4>
-      @for (availability of club().availabilities; track availability.courtName) {
-        <app-grid-court-availability [availability]="availability" />
+    <div class="text-center">
+      <h4 class="text-l font-bold font-mono text-white whitespace-nowrap mb-2">{{club().clubName}}</h4>
+
+      @if(club().availabilities.length <= visibleAvailabilitiesCount) {
+        @for (availability of club().availabilities; track $index) {
+          <app-grid-court-availability [availability]="availability" />
+        }
+      } @else {
+        @if(!isExpanded()){
+          @for (availability of club().availabilities.slice(0, visibleAvailabilitiesCount); track $index) {
+            <app-grid-court-availability [availability]="availability" />
+          }
+          <button
+            class="text-blue-400 hover:text-blue-300 text-sm mt-2 cursor-pointer underline mb-2"
+            (click)="toggleExpanded()">
+            ...{{excessiveAvailabilitiesCount()}} more availabilities
+          </button>
+        } @else {
+          @for (availability of club().availabilities; track $index) {
+            <app-grid-court-availability [availability]="availability" />
+          }
+          <button
+            class="text-blue-400 hover:text-blue-300 text-sm mt-2 cursor-pointer underline mb-2"
+            (click)="toggleExpanded()">
+            Show less
+          </button>
+        }
       }
     </div>
   `,
@@ -19,4 +42,8 @@ import {GridCourtAvailabilityComponent} from './grid-court-availability.componen
 })
 export class CourtAvailabilityGridClubComponent {
   club = input.required<CourtAvailabilityGridClub>()
+  isExpanded = signal(false);
+  visibleAvailabilitiesCount = 3;
+  excessiveAvailabilitiesCount = computed(() => this.club().availabilities.length - this.visibleAvailabilitiesCount);
+  toggleExpanded = () => this.isExpanded.update(value => !value);
 }

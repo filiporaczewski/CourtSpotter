@@ -1,21 +1,70 @@
-import {Component, input} from '@angular/core';
+import {Component, computed, input, Signal} from '@angular/core';
 import {CourtAvailabilityGridItem} from '../models/CourtAvailabilityGridModels';
-import {BookingDurationPipe} from '../pipes/booking-duration.pipe';
+import {CourtType} from '../models/court-type';
+import {PcTagComponent} from '../shared/pc-tag/pc-tag.component';
 
 @Component({
   selector: 'app-grid-court-availability',
   imports: [
-    BookingDurationPipe
+    PcTagComponent
   ],
   template: `
     <div class="mb-3 border border-gray-300 rounded-md p-3 bg-slate-700 whitespace-nowrap">
-      <div class="flex justify-between items-center"><span class="font-bold">{{availability().courtName}}</span><span class="text-sm text-yellow-300">{{availability().durationInMinutes | bookingDuration}}</span></div>
-      <div class="font-bold text-sm mb-1">{{availability().price }}&nbsp;{{availability().currency}}</div>
-      <a href="#" class="text-center text-blue-400 hover:text-blue-600 hover:underline transition-colors duration-200">Book in {{availability().provider }}</a>
+      <div class="font-bold font-mono text-gray-200">{{availability().courtName}}</div>
+      <div class="py-1 flex items-center justify-center gap-1 mb-1 font-bold text-sm">
+        <span class="px-0.5">
+          @if(isIndoor()) {
+            <app-pc-tag value="Indoor" backgroundColorClass="bg-slate-950" textColorClass="text-white" />
+          } @else {
+            <app-pc-tag value="Outdoor" backgroundColorClass="bg-green-600" textColorClass="text-white" />
+          }
+        </span>
+
+        @for (durationConfig of durationConfigs(); track $index) {
+          <app-pc-tag [value]="durationConfig.text" [backgroundColorClass]="durationConfig.bgColorClass" [textColorClass]="durationConfig.textColorClass" paddingXClass="px-1.5" />
+        }
+      </div>
+       <div><a href="#" class="text-center text-blue-400 hover:text-blue-600 hover:underline transition-colors duration-200">Book in {{availability().provider }}</a></div>
     </div>
   `,
   styles: ``
 })
 export class GridCourtAvailabilityComponent {
   availability = input.required<CourtAvailabilityGridItem>()
+  isIndoor = computed(() => this.availability().courtType === CourtType.Indoor);
+
+  durationConfigs: Signal<durationConfig[]> = computed(() => {
+    return this.availability().durationsInMinutes.map((duration) => {
+      return this.getDurationConfig(duration);
+    })
+  })
+
+  private getDurationConfig = (durationInMinutes: number): durationConfig => {
+    switch (durationInMinutes) {
+      case 60:
+        return {
+          text: '1h',
+          bgColorClass: 'bg-blue-600',
+          textColorClass: 'text-white'
+        }
+      case 90:
+        return {
+          text: '1.5h',
+          bgColorClass: 'bg-blue-600',
+          textColorClass: 'text-white'
+        }
+      default:
+        return {
+          text: '2h',
+          bgColorClass: 'bg-blue-600',
+          textColorClass: 'text-white'
+        }
+    }
+  }
+}
+
+interface durationConfig {
+  text: string,
+  bgColorClass: string,
+  textColorClass: string
 }

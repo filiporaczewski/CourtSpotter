@@ -19,7 +19,14 @@ public static class CourtAvailabilitiesEndpoints
             .WithDescription("Retrieves all available court slots within the specified date range");
     }
     
-    private static async Task<IResult> GetCourtAvailabilities([FromQuery] DateTime startDate, [FromQuery] DateTime endDate, [FromServices] ICourtAvailabilityRepository repository, CancellationToken cancellationToken = default)
+    private static async Task<IResult> GetCourtAvailabilities(
+        [FromQuery] DateTime startDate, 
+        [FromQuery] DateTime endDate,
+        [FromQuery] int[]? durations,
+        [FromQuery] string[]? clubIds,
+        [FromQuery] CourtType? courtType,
+        [FromServices] ICourtAvailabilityRepository repository, 
+        CancellationToken cancellationToken = default)
     {
         var request = new GetCourtAvailabilitiesRequest(startDate, endDate);
         
@@ -37,7 +44,10 @@ public static class CourtAvailabilitiesEndpoints
         {
             var availabilities = await repository.GetAvailabilitiesAsync(
                 startDate.Date, 
-                endDate.Date.AddDays(1).AddTicks(-1), // End of day
+                endDate.Date.AddDays(1).AddTicks(-1),
+                durations,
+                clubIds,
+                courtType,
                 cancellationToken);
             
             var dtos = availabilities.Select(MapToDto).ToList();
@@ -47,7 +57,8 @@ public static class CourtAvailabilitiesEndpoints
                 TotalCount = dtos.Count,
                 CourtAvailabilities = dtos
             });
-        } catch (Exception e)
+        } 
+        catch (Exception e)
         {
             return Results.Problem(
                 title: "Error while getting court availabilities",
@@ -69,7 +80,8 @@ public static class CourtAvailabilitiesEndpoints
             Currency: courtAvailability.Currency ?? "PLN",
             BookingUrl: courtAvailability.BookingUrl ?? string.Empty,
             Provider: MapProvider(courtAvailability.Provider),
-            DurationInMinutes: CalculateDurationInMinutes(courtAvailability.StartTime, courtAvailability.EndTime)
+            DurationInMinutes: CalculateDurationInMinutes(courtAvailability.StartTime, courtAvailability.EndTime),
+            CourtType: courtAvailability.Type
         );
     }
     
@@ -80,6 +92,7 @@ public static class CourtAvailabilitiesEndpoints
             ProviderType.CourtMe => "CourtMe",
             ProviderType.KlubyOrg => "KlubyOrg",
             ProviderType.Playtomic => "Playtomic",
+            ProviderType.RezerwujKort => "RezerwujKort",
             _ => throw new NotSupportedException("Provider not supported.")
         };   
     }

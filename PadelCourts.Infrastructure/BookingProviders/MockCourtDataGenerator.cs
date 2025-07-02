@@ -45,7 +45,7 @@ public class MockCourtDataGenerator
     }
 
     public static IEnumerable<CourtAvailability> GenerateAvailabilities(
-        Club club,
+        PadelClub padelClub,
         DateTime startDate,
         DateTime endDate,
         int startHour,
@@ -78,8 +78,8 @@ public class MockCourtDataGenerator
                 availabilities.Add(new CourtAvailability
                 {
                     Id = Guid.NewGuid().ToString(),
-                    ClubId = club.Id,
-                    ClubName = club.Name,
+                    ClubId = padelClub.ClubId,
+                    ClubName = padelClub.Name,
                     CourtName = courtName,
                     Type = GetRandomCourtType(),
                     StartTime = startTime,

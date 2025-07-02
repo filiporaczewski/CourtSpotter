@@ -4,5 +4,6 @@ public enum ProviderType
 {
     Playtomic,
     CourtMe,
-    KlubyOrg
+    KlubyOrg,
+    RezerwujKort
 }
