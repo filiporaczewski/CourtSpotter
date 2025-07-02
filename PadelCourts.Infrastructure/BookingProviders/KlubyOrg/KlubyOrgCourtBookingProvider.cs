@@ -5,22 +5,25 @@ using AngleSharp.Dom;
 using PadelCourts.Core.Contracts;
 using PadelCourts.Core.Models;
 using PadelCourts.Infrastructure.BookingProviders.KlubyOrg;
+using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
 {
     private readonly HttpClient _authenticatedClient;
     private readonly string _baseUrl = "https://kluby.org/";
-    private readonly string _klubyOrgLogin = "mati.lewandowski1243@gmail.com";
-    private readonly string _klubyOrgPassword = "Subaru23";
+    private readonly string _klubyOrgLogin;
+    private readonly string _klubyOrgPassword;
+    private readonly CookieContainer _cookieContainer;
     private const int MinSlotsForOneHour = 2;
     private const int MinSlotsForOneAndHalfHours = 3;
     private const int MinSlotsForTwoHours = 4;
-    private readonly CookieContainer _cookieContainer;
 
-    public KlubyOrgCourtBookingProvider(IHttpClientFactory httpClientFactory, CookieContainer cookieContainer)
+    public KlubyOrgCourtBookingProvider(IHttpClientFactory httpClientFactory, CookieContainer cookieContainer, IConfiguration configuration)
     {
         _authenticatedClient = httpClientFactory.CreateClient("KlubyOrgClient");
         _cookieContainer = cookieContainer;
+        _klubyOrgLogin = configuration["KlubyOrg:Username"];
+        _klubyOrgPassword = configuration["KlubyOrg:Password"];
     }
     
     public async Task<IEnumerable<CourtAvailability>> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
@@ -32,9 +35,6 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         
         for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
         {
-            // var dailyAvailabilities = await GetDailyAvailabilitiesAsync(padelClub, date, cancellationToken);
-            // allAvailabilities.AddRange(dailyAvailabilities);
-
             if (padelClub.PagesCount is > 0)
             {
                 for (int page = 0; page < padelClub.PagesCount; page++)

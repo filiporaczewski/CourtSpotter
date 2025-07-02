@@ -25,6 +25,11 @@ builder.Services.AddSingleton<CourtBookingMeProvider>();
 builder.Services.AddSingleton<RezerwujKortBookingProvider>();
 builder.Services.AddSingleton<ICourtBookingProviderResolver, CourtBookingProviderResolver>();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 builder.Services.AddHttpClient("PlaytomicClient", client =>
 {
     client.DefaultRequestHeaders.Add("User-Agent", 
