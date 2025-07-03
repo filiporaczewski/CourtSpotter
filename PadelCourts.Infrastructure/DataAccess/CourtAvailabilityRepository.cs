@@ -61,7 +61,7 @@ public class CourtAvailabilityRepository : ICourtAvailabilityRepository
                 parameters[paramName] = clubIds[i];
             }
             
-            queryText += $" AND {string.Join(" OR ", clubIdsConditions)}";       
+            queryText += $" AND ({string.Join(" OR ", clubIdsConditions)})";       
         }
 
         if (courtType != null)
