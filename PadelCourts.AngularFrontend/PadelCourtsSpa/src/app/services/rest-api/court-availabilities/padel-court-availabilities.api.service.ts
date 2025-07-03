@@ -3,12 +3,13 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {GetCourtAvailabilitiesResponse} from './get-court-availabilities.response';
 import {Observable} from 'rxjs';
 import {CourtType} from '../../../models/court-type';
+import {environment} from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PadelCourtAvailabilitiesApiService {
-  private readonly baseUrl: string = 'https://localhost:7043/api'
+  private readonly baseUrl: string = environment.apiBaseUrl;
   private http = inject(HttpClient);
 
   getAvailabilities(date: Date, durations?: number[], clubIds?: string[], courtType?: CourtType): Observable<GetCourtAvailabilitiesResponse> {

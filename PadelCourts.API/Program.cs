@@ -42,11 +42,13 @@ builder.Services.AddHttpClient("RezerwujKortClient", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+var frontendUrl = builder.Configuration["FrontendUrl"];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularSpa", policy =>
     {
-        policy.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod();
+        policy.WithOrigins(frontendUrl).AllowAnyHeader().AllowAnyMethod();
     });
 });
 
