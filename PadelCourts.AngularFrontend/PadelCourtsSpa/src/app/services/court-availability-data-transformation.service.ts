@@ -74,7 +74,7 @@ export class CourtAvailabilityDataTransformationService {
         acc[key] = {
           courtName: dto.courtName,
           clubName: dto.clubName,
-          startTime: new Date(dto.dateTime),
+          startTime: this.parseAsUTC(dto.dateTime),
           bookingUrl: dto.bookingUrl,
           provider: dto.provider,
           durationsInMinutes: [],
@@ -114,6 +114,24 @@ export class CourtAvailabilityDataTransformationService {
       availabilities: availabilities.sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
     }));
   }
+
+  private parseAsUTC = (dateTimeString: string): Date => {
+    const date = new Date(dateTimeString);
+
+    if (dateTimeString.includes('+') || dateTimeString.includes('Z')) {
+      const utcYear = date.getUTCFullYear();
+      const utcMonth = date.getUTCMonth();
+      const utcDate = date.getUTCDate();
+      const utcHours = date.getUTCHours();
+      const utcMinutes = date.getUTCMinutes();
+      const utcSeconds = date.getUTCSeconds();
+
+      return new Date(utcYear, utcMonth, utcDate, utcHours, utcMinutes, utcSeconds);
+    }
+
+    return date;
+  }
+
 
   private extractClubName = (clubName: string) => clubName || 'Unknown club'
 }
