@@ -1,9 +1,19 @@
-import {Component, input, model} from '@angular/core';
+import {Component, inject, input, model, signal} from '@angular/core';
 import {PadelClub} from '../models/padel-club';
+import {NgIcon, provideIcons} from '@ng-icons/core';
+import {heroInformationCircle} from '@ng-icons/heroicons/outline';
+import {PcOverlayDialogComponent} from '../shared/pc-overlay-dialog/pc-overlay-dialog.component';
+import {ClubInfoComponent} from './club-info/club-info.component';
+import {AppStateService} from '../services/app-state.service';
 
 @Component({
   selector: 'app-padel-club-filters',
-  imports: [],
+  imports: [
+    NgIcon,
+    PcOverlayDialogComponent,
+    ClubInfoComponent
+  ],
+  providers: [provideIcons({ heroInformationCircle })],
   template: `
     <div class="mb-6">
       <h4 class="font-mono text-lg text-white mb-3">
@@ -14,16 +24,23 @@ import {PadelClub} from '../models/padel-club';
           <label class="flex items-center space-x-2 font-mono text-white cursor-pointer py-1">
             <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
             <span class="text-sm">{{padelClub.name}}</span>
+            <ng-icon size="20px" (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" color="#90cdf4" />
           </label>
         }
       </div>
     </div>
+    <app-pc-overlay-dialog [(visible)]="clubInfoDialogVisible" [overlayWidth]="650">
+      <app-club-info />
+    </app-pc-overlay-dialog>
   `,
   styles: ``
 })
 export class PadelClubFiltersComponent {
   padelClubs = input.required<PadelClub[]>();
   clubIds = model.required<Set<string>>();
+  clubInfoDialogVisible = model<boolean>(false);
+
+  private appStateService = inject(AppStateService);
 
   toggleClubSelection = (clubId: string, event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -36,4 +53,11 @@ export class PadelClubFiltersComponent {
   }
 
   isClubSelected = (clubId: string) => this.clubIds().has(clubId)
+
+  onClubInfoClicked = (clubName: string, event: Event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    this.clubInfoDialogVisible.set(true);
+    this.appStateService.updateSelectedClub(clubName)
+  }
 }

@@ -46,7 +46,7 @@ import {PadelClubsApiService} from '../services/rest-api/padel-clubs/padel-clubs
                 @if(item.gridClubs.length !== 0) {
                   <div class="flex-1 w-[250px] min-w-fit border-r border-gray-300 last:border-r-0 bg-slate-900">
                     <!-- Header -->
-                    <div class="bg-slate-700 p-4 border-b border-gray-300 text-center text-white font-bold sticky top-0 z-10">
+                    <div class="bg-slate-700 p-4 border-b border-gray-300 text-center text-white font-bold top-0 z-10">
                       <div>{{ item | bookingTime }}</div>
                     </div>
                     <!-- Content -->
