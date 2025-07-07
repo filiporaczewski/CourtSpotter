@@ -111,33 +111,4 @@ public class CourtAvailabilityRepository : ICourtAvailabilityRepository
             // Item already deleted, continue
         }
     }
-    
-    public async Task DeleteOldAvailabilitiesAsync(DateTime olderThan, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-        
-        // var query = new QueryDefinition("SELECT c.id, c.ClubId FROM c WHERE c.Date < @olderThan").WithParameter("@olderThan", olderThan.Date);
-        // var itemsToDelete = new List<(string, string)>();
-        // using var iterator = _container.GetItemQueryIterator<dynamic>(query);
-        //
-        // while (iterator.HasMoreResults)
-        // {
-        //     var response = await iterator.ReadNextAsync(cancellationToken);
-        //     foreach (var item in response)
-        //     {
-        //         itemsToDelete.Add((item.id.ToString(), item.PartitionKey.ToString()));
-        //     }
-        // }
-        //
-        // foreach(var (id, partitionKey) in itemsToDelete)
-        // {
-        //     try
-        //     {
-        //         await _container.DeleteItemAsync<CourtAvailability>(id, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
-        //     }
-        //     catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        //     {
-        //     }
-        // }
-    }
 }

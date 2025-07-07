@@ -6,11 +6,11 @@ public class PadelClub
 {
     public string Id => ClubId;
     
-    public string ClubId { get; set; }
-    public string Name { get; set; }
+    public string ClubId { get; init; }
+    public string Name { get; init; }
     
     [JsonPropertyName("provider")]
-    public ProviderType Provider { get; set; }
+    public ProviderType Provider { get; init; }
     
-    public int? PagesCount { get; set; }
+    public int? PagesCount { get; init; }
 }

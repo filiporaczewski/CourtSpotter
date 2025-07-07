@@ -4,27 +4,27 @@ namespace PadelCourts.Core.Models;
 
 public class CourtAvailability
 {
-    public string Id { get; set; }
+    public string Id { get; init; }
     
-    public string ClubId { get; set; }
+    public string ClubId { get; init; }
 
-    public string ClubName { get; set; }
+    public string ClubName { get; init; }
 
-    public string CourtName { get; set; }
+    public string CourtName { get; init; }
     
     [JsonPropertyName("type")]
-    public CourtType Type { get; set; } = CourtType.Indoor;
-    public DateTime StartTime { get; set; }
-    public DateTime EndTime { get; set; }
+    public CourtType Type { get; init; } = CourtType.Indoor;
+    public DateTime StartTime { get; init; }
+    public DateTime EndTime { get; init; }
 
-    public decimal Price { get; set; }
+    public decimal Price { get; init; }
 
-    public string Currency { get; set; } = "PLN";
+    public string Currency { get; init; } = "PLN";
     
     public TimeSpan Duration => EndTime - StartTime;
 
-    public string? BookingUrl { get; set; }
+    public string? BookingUrl { get; init; }
     
     [JsonPropertyName("provider")]
-    public ProviderType Provider { get; set; }
+    public ProviderType Provider { get; init; }
 }

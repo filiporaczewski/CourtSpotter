@@ -4,12 +4,12 @@ namespace PadelCourts.Core.Models;
 
 public class PlaytomicCourt
 {
-    public string Id { get; set; }
+    public string Id { get; init; }
     
-    public string ClubId { get; set; }
+    public string ClubId { get; init; }
     
-    public string Name { get; set; }
+    public string Name { get; init; }
     
     [JsonPropertyName("courtType")]
-    public CourtType Type { get; set; }
+    public CourtType Type { get; init; }
 }

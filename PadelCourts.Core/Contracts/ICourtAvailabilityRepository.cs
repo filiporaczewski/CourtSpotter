@@ -9,5 +9,4 @@ public interface ICourtAvailabilityRepository
     Task DeleteAvailabilityAsync(CourtAvailability availability, CancellationToken cancellationToken = default);
     
     Task DeleteAvailabilitiesAsync(IEnumerable<CourtAvailability> availabilities, CancellationToken cancellationToken = default);
-    Task DeleteOldAvailabilitiesAsync(DateTime olderThan, CancellationToken cancellationToken = default);
 }
