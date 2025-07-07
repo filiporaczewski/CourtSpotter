@@ -1,15 +1,6 @@
-using System.Net;
-using OpenTelemetry;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Infrastructure.BookingProviders;
-using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
 using WebApplication1.BackgroundServices;
 using WebApplication1.Endpoints;
 using WebApplication1.Extensions;
-using WebApplication1.Resolvers;
 
 var builder = WebApplication.CreateBuilder(args);
 
