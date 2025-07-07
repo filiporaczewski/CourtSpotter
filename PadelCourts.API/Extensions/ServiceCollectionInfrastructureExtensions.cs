@@ -50,7 +50,7 @@ public static class ServiceCollectionInfrastructureExtensions
         
         logging.AddOpenTelemetry(b =>
         {
-            b.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("PadelCourtSearch.API", "1.0.0"));
+            b.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("api-padelcourtsearch", "1.0.0"));
 
             if (environment.IsDevelopment())
             {
@@ -62,14 +62,13 @@ public static class ServiceCollectionInfrastructureExtensions
                     options.ConnectionString = azureMonitorConnectionString;
                 });
             }
-
         });
         
         services.AddOpenTelemetry()
             .WithTracing(b =>
             {
                 b.SetResourceBuilder(ResourceBuilder.CreateDefault()
-                        .AddService("PadelCourtSearch.API", "1.0.0")
+                        .AddService("api-padelcourtsearch", "1.0.0")
                         .AddAttributes(new Dictionary<string, object>
                         {
                             ["deployment.environment"] = environment.EnvironmentName
@@ -105,7 +104,7 @@ public static class ServiceCollectionInfrastructureExtensions
             .WithMetrics(m =>
             {
                 m.SetResourceBuilder(ResourceBuilder.CreateDefault()
-                    .AddService("PadelCourts.API", "1.0.0"))
+                    .AddService("api-padelcourtsearch", "1.0.0"))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation();
 
