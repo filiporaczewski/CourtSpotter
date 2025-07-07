@@ -41,7 +41,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
         var availabilities = new List<CourtAvailability>();
         
         var dateString = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var apiUrl = $"https://rezerwujkort.pl/rest/reservation/one_day_client_reservation_calendar/{GetUrlSuffix(padelClub.Name)}/{dateString}/1/2";
+        var apiUrl = $"https://www.rezerwujkort.pl/rest/reservation/one_day_client_reservation_calendar/{GetUrlSuffix(padelClub.Name)}/{dateString}/1/2";
         
         try
         {
