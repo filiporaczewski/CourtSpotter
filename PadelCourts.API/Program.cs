@@ -1,4 +1,8 @@
 using System.Net;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using PadelCourts.Core.Contracts;
 using PadelCourts.Infrastructure.BookingProviders;
 using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
@@ -9,38 +13,19 @@ using WebApplication1.Resolvers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.Configure<CourtBookingAvailabilitiesSyncOptions>(builder.Configuration.GetSection("CourtBookingAvailabilitiesSync"));
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddInfrastructure(builder.Configuration);
-
-builder.Services.Configure<CourtBookingAvailabilitiesSyncOptions>(builder.Configuration.GetSection("CourtBookingAvailabilitiesSync"));
-
+builder.Services.AddInfrastructure(builder.Configuration, builder.Logging, builder.Environment);
+builder.Services.AddBookingProviders(builder.Configuration);
 builder.Services.AddHostedService<CourtBookingAvailabilitiesSyncingService>();
-builder.Services.AddSingleton<PlaytomicBookingProvider>();
-builder.Services.AddSingleton<KlubyOrgCourtBookingProvider>();
-builder.Services.AddSingleton<CourtBookingMeProvider>();
-builder.Services.AddSingleton<RezerwujKortBookingProvider>();
-builder.Services.AddSingleton<ICourtBookingProviderResolver, CourtBookingProviderResolver>();
 
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddUserSecrets<Program>();
 }
-
-builder.Services.AddHttpClient("PlaytomicClient", client =>
-{
-    client.DefaultRequestHeaders.Add("User-Agent", 
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddHttpClient("RezerwujKortClient", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
 
 var frontendUrl = builder.Configuration["FrontendUrl"];
 
@@ -51,25 +36,6 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(frontendUrl).AllowAnyHeader().AllowAnyMethod();
     });
 });
-
-builder.Services.AddSingleton<CookieContainer>();
-
-builder.Services.AddSingleton<HttpClientHandler>(sp =>
-{
-    var container = sp.GetRequiredService<CookieContainer>();
-    return new HttpClientHandler
-    {
-        CookieContainer = container,
-        UseCookies = true
-    };
-});
-
-builder.Services.AddHttpClient("KlubyOrgClient", client =>
-{
-    client.BaseAddress = new Uri("https://kluby.org/");
-    client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-    client.Timeout = TimeSpan.FromSeconds(30);
-}).ConfigurePrimaryHttpMessageHandler(sp => sp.GetRequiredService<HttpClientHandler>());
 
 var app = builder.Build();
 
