@@ -65,21 +65,26 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
 
             var syncTasks = availablePadelClubs.Select(async club =>
             {
-                try
-                {
-                    var courtBookingProvider = _courtBookingProviderResolver.GetProvider(club.Provider);
-                    var mostCurrentClubAvailabilities = await courtBookingProvider.GetCourtBookingAvailabilitiesAsync(club, startDate, endDate, cancellationToken);
+                var courtBookingProvider = _courtBookingProviderResolver.GetProvider(club.Provider);
+                    
+                var clubCourtBookingAvailabilitiesSyncResult = await courtBookingProvider.GetCourtBookingAvailabilitiesAsync(club, startDate, endDate, cancellationToken);
 
-                    _logger.LogInformation("Successfully synced {count} availabilities for club: {clubName}", mostCurrentClubAvailabilities.Count(), club.Name);
-                    
-                    return mostCurrentClubAvailabilities;
-                }
-                catch (Exception e)
+                if (clubCourtBookingAvailabilitiesSyncResult.FailedDailyCourtBookingAvailabilitiesSyncResults.Any())
                 {
-                    _logger.LogError(e, "Failed to sync club: {clubName} (Provider: {provider})", club.Name, club.Provider);
-                    
-                    return new List<CourtAvailability>();
+                    foreach (var failedDailyCourtBookingAvailabilitiesSyncResult in clubCourtBookingAvailabilitiesSyncResult.FailedDailyCourtBookingAvailabilitiesSyncResults)
+                    {
+                        _logger.LogError(failedDailyCourtBookingAvailabilitiesSyncResult.Exception, "{FailureReason} for {ClubName} at {Date}", failedDailyCourtBookingAvailabilitiesSyncResult.Reason, club.Name, failedDailyCourtBookingAvailabilitiesSyncResult.Date);
+                    }
                 }
+                    
+                var mostCurrentClubAvailabilities = clubCourtBookingAvailabilitiesSyncResult.CourtAvailabilities;
+
+                if (mostCurrentClubAvailabilities.Any())
+                {
+                    _logger.LogInformation("Successfully synced {count} availabilities for club: {clubName}", mostCurrentClubAvailabilities.Count, club.Name);   
+                }
+                    
+                return mostCurrentClubAvailabilities;
             }).ToArray();
             
             var availabilitiesPerProvider = await Task.WhenAll(syncTasks);
@@ -89,16 +94,18 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
             {
                 allProvidersCombinedAvailabilities.AddRange(providerAvailabilities);
             }
-            
-            var courtAvailabilityRepository = scope.ServiceProvider.GetRequiredService<ICourtAvailabilityRepository>();
-            var existingAvailabilities = await courtAvailabilityRepository.GetAvailabilitiesAsync(startDate.AddDays(-2), endDate.AddDays(2), cancellationToken: cancellationToken);
-            await SyncExistingAndMostCurrentAvailabilitiesAsync(allProvidersCombinedAvailabilities, existingAvailabilities, courtAvailabilityRepository, cancellationToken);
-            _logger.LogInformation("Finished syncing court booking availabilities from {startDate} to {endDate}", startDate, endDate);
-            _logger.LogInformation("Sync completed in {elapsedMilliseconds} ms for {availableClubsCount} clubs", stopWatch.ElapsedMilliseconds, availablePadelClubs.Count);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to sync court booking availabilities");
+
+            try
+            {
+                var courtAvailabilityRepository = scope.ServiceProvider.GetRequiredService<ICourtAvailabilityRepository>();
+                var existingAvailabilities = await courtAvailabilityRepository.GetAvailabilitiesAsync(startDate.AddDays(-2), endDate.AddDays(2), cancellationToken: cancellationToken);
+                await SyncExistingAndMostCurrentAvailabilitiesAsync(allProvidersCombinedAvailabilities, existingAvailabilities, courtAvailabilityRepository, cancellationToken);
+                _logger.LogInformation("Finished syncing court booking availabilities from {startDate} to {endDate}", startDate, endDate);
+                _logger.LogInformation("Sync completed in {elapsedMilliseconds} ms for {availableClubsCount} clubs", stopWatch.ElapsedMilliseconds, availablePadelClubs.Count);   
+            } catch (Exception e)
+            {
+                _logger.LogError(e, "Error while syncing court booking availabilities at {CurrentDate}", DateTime.Now);
+            }
         }
         finally
         {

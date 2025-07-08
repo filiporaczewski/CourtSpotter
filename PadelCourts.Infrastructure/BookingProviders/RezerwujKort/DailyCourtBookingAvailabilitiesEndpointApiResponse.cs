@@ -1,6 +1,6 @@
 ﻿namespace PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
 
-public class ApiResponse
+public class DailyCourtBookingAvailabilitiesEndpointApiResponse
 {
     public List<Court> Courts { get; set; } = [];
     public string Date { get; set; } = string.Empty;

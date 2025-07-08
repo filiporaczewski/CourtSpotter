@@ -4,6 +4,7 @@ using AngleSharp;
 using AngleSharp.Dom;
 using PadelCourts.Core.Contracts;
 using PadelCourts.Core.Models;
+using PadelCourts.Core.Results;
 using PadelCourts.Infrastructure.BookingProviders.KlubyOrg;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
@@ -26,12 +27,35 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         _klubyOrgPassword = configuration["KlubyOrg:Password"];
     }
     
-    public async Task<IEnumerable<CourtAvailability>> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+    public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         var allAvailabilities = new List<CourtAvailability>();
-        await EnsureAuthenticatedAsync(cancellationToken);
+        var failedDailyResults = new List<FailedDailyCourtBookingAvailabilitiesSyncResult>();
+
+        try
+        { 
+            await EnsureAuthenticatedAsync(cancellationToken);   
+        } 
+        catch (InvalidOperationException ex) when (ex.Message.Contains("authenticate"))
+        {
+            for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
+            {
+                failedDailyResults.Add(new FailedDailyCourtBookingAvailabilitiesSyncResult
+                {
+                    Date = DateOnly.FromDateTime(date),
+                    Reason = "Failed to authenticate to KlubyOrg",
+                    Exception = ex
+                });
+            }
+            
+            return new CourtBookingAvailabilitiesSyncResult
+            {
+                CourtAvailabilities = allAvailabilities,
+                FailedDailyCourtBookingAvailabilitiesSyncResults = failedDailyResults
+            };
+        }
         
-        var dateTasks = new List<Task<IEnumerable<CourtAvailability>>>();
+        var dateTasks = new List<Task<DailyCourtBookingAvailabilitiesSyncResult>>();
         
         for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
         {
@@ -48,14 +72,30 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
             }
         }
         
-        var dailyAvailabilitiesResults = await Task.WhenAll(dateTasks);
-        
-        foreach (var dailyAvailabilities in dailyAvailabilitiesResults)
+        var dailyResults = await Task.WhenAll(dateTasks);
+            
+        foreach (var dailyResult in dailyResults)
         {
-            allAvailabilities.AddRange(dailyAvailabilities);
+            if (dailyResult.Success)
+            {
+                allAvailabilities.AddRange(dailyResult.CourtAvailabilities);
+            }
+            else
+            {
+                failedDailyResults.Add(new FailedDailyCourtBookingAvailabilitiesSyncResult
+                {
+                    Date = dailyResult.Date,
+                    Reason = dailyResult.FailureReason!,
+                    Exception = dailyResult.Exception
+                });
+            }
         }
-        
-        return allAvailabilities;
+            
+        return new CourtBookingAvailabilitiesSyncResult
+        {
+            CourtAvailabilities = allAvailabilities,
+            FailedDailyCourtBookingAvailabilitiesSyncResults = failedDailyResults
+        };
     }
 
     private async Task EnsureAuthenticatedAsync(CancellationToken cancellationToken = default)
@@ -68,7 +108,7 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         }
     }
 
-    private async Task<IEnumerable<CourtAvailability>> GetDailyAvailabilitiesAsync(PadelClub padelClub, DateTime date, int page, CancellationToken cancellationToken = default)
+    private async Task<DailyCourtBookingAvailabilitiesSyncResult> GetDailyAvailabilitiesAsync(PadelClub padelClub, DateTime date, int page, CancellationToken cancellationToken = default)
     {
         var dailyAvailabilities = new List<CourtAvailability>();
         var dateBookingScheduleUrl = GetDateBookingScheduleUrl(date, padelClub.Name, page);
@@ -76,13 +116,19 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         try
         {
             var bookingScheduleHtmlString = await GetBookingScheduleHtmlStringAsync(dateBookingScheduleUrl, cancellationToken);
+            
+            if (string.IsNullOrEmpty(bookingScheduleHtmlString))
+            {
+                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Empty response from KlubyOrg");
+            }
+            
             var bookingScheduleDomDocument = await GetBookingScheduleHtmlDocumentAsync(bookingScheduleHtmlString, cancellationToken);
 
             var bookingScheduleTableElement = bookingScheduleDomDocument.QuerySelector("#grafik");
             
             if (bookingScheduleTableElement is null)
             {
-                return dailyAvailabilities;
+                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Failed to find booking schedule table");
             }
             
             var availableCourtNames = bookingScheduleTableElement.QuerySelectorAll("thead tr th")
@@ -94,7 +140,7 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
             
             if (!halfHourSlotRows.Any())
             {
-                return dailyAvailabilities;
+                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Failed to find any half hour slot rows");
             }
 
             var courtStates = new GridColumnState[availableCourtNames.Count];
@@ -188,12 +234,27 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
                     dailyAvailabilities.AddRange(GenerateCourtAvailabilities(date, courtState, padelClub, dateBookingScheduleUrl)); 
                 }
             }
-        } catch (Exception e)
+        }
+        catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Error fetching KlubyOrg availability: {e.Message}");
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Network error calling KlubyOrg", ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Request timeout calling KlubyOrg", ex);
+        }
+        catch (Exception ex)
+        {
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Unexpected error processing KlubyOrg", ex);
         }
 
-        return dailyAvailabilities;
+
+        return new DailyCourtBookingAvailabilitiesSyncResult
+        {
+            CourtAvailabilities = dailyAvailabilities,
+            Date = DateOnly.FromDateTime(date),
+            Success = true
+        };
     }
 
     private async Task<IDocument> GetBookingScheduleHtmlDocumentAsync(string bookingScheduleHtmlString, CancellationToken cancellationToken = default)

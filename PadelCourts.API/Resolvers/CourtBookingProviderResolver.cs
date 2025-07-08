@@ -1,6 +1,7 @@
 ﻿using PadelCourts.Core.Contracts;
 using PadelCourts.Core.Models;
 using PadelCourts.Infrastructure.BookingProviders;
+using PadelCourts.Infrastructure.BookingProviders.Playtomic;
 using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
 
 namespace WebApplication1.Resolvers;
