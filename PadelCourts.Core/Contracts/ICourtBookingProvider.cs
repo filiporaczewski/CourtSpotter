@@ -1,10 +1,11 @@
 ﻿using PadelCourts.Core.Models;
+using PadelCourts.Core.Results;
 
 namespace PadelCourts.Core.Contracts;
 
 public interface ICourtBookingProvider
 {
-    Task<IEnumerable<CourtAvailability>> GetCourtBookingAvailabilitiesAsync(
+    Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(
         PadelClub padelClub,
         DateTime startDate,
         DateTime endDate,

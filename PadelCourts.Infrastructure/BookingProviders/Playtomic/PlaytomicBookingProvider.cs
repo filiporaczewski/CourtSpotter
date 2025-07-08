@@ -3,8 +3,9 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using PadelCourts.Core.Contracts;
 using PadelCourts.Core.Models;
+using PadelCourts.Core.Results;
 
-namespace PadelCourts.Infrastructure.BookingProviders;
+namespace PadelCourts.Infrastructure.BookingProviders.Playtomic;
 
 public class PlaytomicBookingProvider : ICourtBookingProvider
 {
@@ -22,14 +23,16 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
 
     }
     
-    public async Task<IEnumerable<CourtAvailability>> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+    public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         var allAvailabilities = new List<CourtAvailability>();
+        var failedDailyResults = new List<FailedDailyCourtBookingAvailabilitiesSyncResult>();
+
         using var scope = _serviceProvider.CreateScope();
         var playtomicCourtsRepository = scope.ServiceProvider.GetRequiredService<IPlaytomicCourtsRepository>();
         var bookableCourts = await playtomicCourtsRepository.GetPlaytomicCourtsByClubId(padelClub.ClubId, cancellationToken);
         
-        var dateTasks = new List<Task<IEnumerable<CourtAvailability>>>();
+        var dateTasks = new List<Task<DailyCourtBookingAvailabilitiesSyncResult>>();
         
         for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
         {
@@ -38,16 +41,31 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
         
         var dailyAvailabilitiesResults = await Task.WhenAll(dateTasks);
 
-        foreach (var dailyAvailabilities in dailyAvailabilitiesResults)
+        foreach (var dailyResult in dailyAvailabilitiesResults)
         {
-            allAvailabilities.AddRange(dailyAvailabilities);
+            if (dailyResult.Success)
+            {
+                allAvailabilities.AddRange(dailyResult.CourtAvailabilities);   
+            }
+            else
+            {
+                failedDailyResults.Add(new FailedDailyCourtBookingAvailabilitiesSyncResult
+                {
+                    Date = dailyResult.Date,
+                    Reason = dailyResult.FailureReason!,
+                    Exception = dailyResult.Exception
+                });
+            }
         }
 
-        return allAvailabilities;
+        return new CourtBookingAvailabilitiesSyncResult
+        {
+            CourtAvailabilities = allAvailabilities,
+            FailedDailyCourtBookingAvailabilitiesSyncResults = failedDailyResults
+        };
     }
 
-    private async Task<IEnumerable<CourtAvailability>> GetCourtAvailabilitiesSingleDay(PadelClub padelClub,
-        DateTime date, IEnumerable<PlaytomicCourt> bookableCourts, CancellationToken cancellationToken = default)
+    private async Task<DailyCourtBookingAvailabilitiesSyncResult> GetCourtAvailabilitiesSingleDay(PadelClub padelClub, DateTime date, IEnumerable<PlaytomicCourt> bookableCourts, CancellationToken cancellationToken = default)
     {
         var dateString = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var dailyAvailabilitiesBookingEndpointUrl = $"https://playtomic.com/api/clubs/availability?tenant_id={padelClub.ClubId}&date={dateString}&sport_id=PADEL";
@@ -55,12 +73,18 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
         try
         { 
             var dailyAvailabilitiesBookingEndpointResponse = await _httpClient.GetStringAsync(dailyAvailabilitiesBookingEndpointUrl, cancellationToken);
+            
+            if (string.IsNullOrEmpty(dailyAvailabilitiesBookingEndpointResponse))
+            {
+                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Empty response from Playtomic API");
+            }
+            
             var tenantAvailabilities = JsonSerializer.Deserialize<List<TenantAvailability>>(dailyAvailabilitiesBookingEndpointResponse);
             var courtAvailabilities = new List<CourtAvailability>();
 
             if (tenantAvailabilities is null)
             {
-                return new List<CourtAvailability>();
+                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Failed to deserialize response from Playtomic API");
             }
             
             foreach (var tenantAvailability in tenantAvailabilities)
@@ -101,12 +125,30 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
                 }
             }
 
-            return courtAvailabilities;
-        } catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching Playtomic availability: {ex.Message}");
-            return new List<CourtAvailability>();
+            return new DailyCourtBookingAvailabilitiesSyncResult
+            {
+                CourtAvailabilities = courtAvailabilities,
+                Date = DateOnly.FromDateTime(date),
+                Success = true
+            };
         }
+        catch (HttpRequestException ex)
+        {
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Network error calling Playtomic API", ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Request timeout calling Playtomic API", ex);
+        }
+        catch (JsonException ex)
+        {
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Invalid JSON response from Playtomic API", ex);
+        }
+        catch (Exception ex)
+        {
+            return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Unexpected error processing Playtomic API response for club", ex);
+        }
+
     }
     
     private bool IsValidTimeSlot(TimeSlot slot, DateTime date)

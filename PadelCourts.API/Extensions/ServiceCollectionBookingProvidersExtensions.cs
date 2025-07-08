@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using PadelCourts.Core.Contracts;
 using PadelCourts.Infrastructure.BookingProviders;
+using PadelCourts.Infrastructure.BookingProviders.Playtomic;
 using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
 using WebApplication1.Resolvers;
 
@@ -14,6 +15,7 @@ public static class ServiceCollectionBookingProvidersExtensions
         services.AddSingleton<KlubyOrgCourtBookingProvider>();
         services.AddSingleton<CourtBookingMeProvider>();
         services.AddSingleton<RezerwujKortBookingProvider>();
+        services.AddSingleton<CaseInsensitiveJsonSerializerOptions>(_ => new CaseInsensitiveJsonSerializerOptions());
         services.AddSingleton<ICourtBookingProviderResolver, CourtBookingProviderResolver>();
         
         services.AddHttpClient("PlaytomicClient", client =>
