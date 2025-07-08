@@ -13,31 +13,20 @@ import {PadelCourtAvailabilityDto} from './rest-api/court-availabilities/padel-c
 })
 export class CourtAvailabilityDataTransformationService {
   transformToGridData = (apiResponse: GetCourtAvailabilitiesResponse): CourtAvailabilityGridData => {
-    // const gridItems: CourtAvailabilityGridItem[] = apiResponse.courtAvailabilities.map((dto: PadelCourtAvailabilityDto) => {
-    //   return {
-    //     courtName: dto.courtName,
-    //     clubName: dto.clubName,
-    //     startTime: new Date(dto.dateTime),
-    //     price: dto.price,
-    //     currency: dto.currency,
-    //     bookingUrl: dto.bookingUrl,
-    //     provider: dto.provider,
-    //     durationInMinutes: dto.durationInMinutes,
-    //     columnSpan: this.calculateColumnSpan(dto.durationInMinutes),
-    //     courtType: dto.courtType
-    //   }
-    // });
+    const currentDate = new Date();
+    const filteredAvailabilities = apiResponse.courtAvailabilities.filter(availability =>
+      this.parseAsUTC(availability.dateTime) >= currentDate
+    );
 
-    const mergedAvailabilities = this.mergeAvailabilitiesByCourtAndTime(apiResponse.courtAvailabilities);
 
+    const mergedAvailabilities = this.mergeAvailabilitiesByCourtAndTime(filteredAvailabilities);
     const timeSlotColumns: CourtAvailabilityGridColumn[] = [];
 
-    // Generate columns for each half-hour slot from 6:00 to 22:30
     for(let hour = 6; hour < 23; hour++) {
-      // Full hour (e.g., 6:00, 7:00, etc.)
       const fullHourItems = mergedAvailabilities.filter(item =>
         item.startTime.getHours() === hour && item.startTime.getMinutes() === 0
       );
+
       const fullHourClubGroups = this.groupByClub(fullHourItems);
 
       timeSlotColumns.push({

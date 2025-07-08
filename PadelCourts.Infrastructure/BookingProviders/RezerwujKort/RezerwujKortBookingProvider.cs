@@ -11,6 +11,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
     private readonly HttpClient _httpClient;
     private readonly CaseInsensitiveJsonSerializerOptions _serializerOptions;
     private const string BookableHourStatus = "OPEN";
+    private const string BaseUrl = "https://www.rezerwujkort.pl";
     
     public RezerwujKortBookingProvider(IHttpClientFactory httpClientFactory, CaseInsensitiveJsonSerializerOptions caseInsensitiveJsonSerializerOptions)
     {
@@ -60,7 +61,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
     {
         var availabilities = new List<CourtAvailability>();
         var dateString = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var dailyCourtBookingAvailabilitiesEndpoint = $"https://www.rezerwujkort.pl/rest/reservation/one_day_client_reservation_calendar/{GetUrlSuffix(padelClub.Name)}/{dateString}/1/2";
+        var dailyCourtBookingAvailabilitiesEndpoint = $"{BaseUrl}/rest/reservation/one_day_client_reservation_calendar/{GetUrlSuffix(padelClub.Name)}/{dateString}/1/2";
 
         try
         {
@@ -127,8 +128,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                             StartTime = bookingAvailabilityStartDateTime,
                             EndTime = bookingAvailabilityEndDateTime,
                             Provider = ProviderType.RezerwujKort,
-                            BookingUrl =
-                                $"rezerwujkort.pl/klub/{padelClub.Name}/rezerwacja_online?day={dateString}&court={court.CourtId}&hour={bookableHour.HourName}",
+                            BookingUrl = $"{BaseUrl}/klub/{padelClub.Name}/rezerwacja_online?day={dateString}&court={court.CourtId}&hour={bookableHour.HourName}",
                             Type = IsOutdoor(court.CourtDescription) ? CourtType.Outdoor : CourtType.Indoor
                         });
                     }

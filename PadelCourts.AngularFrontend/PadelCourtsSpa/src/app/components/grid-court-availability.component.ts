@@ -24,7 +24,7 @@ import {PcTagComponent} from '../shared/pc-tag/pc-tag.component';
           <app-pc-tag [value]="durationConfig.text" [backgroundColorClass]="durationConfig.bgColorClass" [textColorClass]="durationConfig.textColorClass" paddingXClass="px-1.5" />
         }
       </div>
-       <div><a href="#" class="text-center text-blue-400 hover:text-blue-600 hover:underline transition-colors duration-200">Book in {{availability().provider }}</a></div>
+       <div><a [href]="availability().bookingUrl" target="_blank" class="text-center text-blue-400 hover:text-blue-600 hover:underline transition-colors duration-200">Book in {{availability().provider }}</a></div>
     </div>
   `,
   styles: ``

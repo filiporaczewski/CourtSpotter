@@ -354,8 +354,7 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         return GenerateCourtAvailability(padelClub, startDate, 90, courtName, bookingUrl);
     }
 
-    private CourtAvailability GenerateCourtAvailability(PadelClub padelClub, DateTime startDate, int durationInMinutes,
-        string courtName, string bookingUrl)
+    private CourtAvailability GenerateCourtAvailability(PadelClub padelClub, DateTime startDate, int durationInMinutes, string courtName, string bookingUrl)
     {
         return new CourtAvailability
         {
