@@ -1,7 +1,7 @@
 import {Component, input, model, output} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {CourtAvailabilitiesSearchFilters} from '../models/court-availabilities-search-filters';
-import {PadelClub} from '../models/padel-club';
+import {CourtAvailabilitiesSearchFilters} from '../../../models/court-availabilities-search-filters';
+import {PadelClub} from '../../../models/padel-club';
 import {DurationFiltersComponent} from './duration-filters.component';
 import {PadelClubFiltersComponent} from './padel-club-filters.component';
 import {DateFilterComponent} from './date-filter.component';
@@ -25,11 +25,11 @@ import {CourtTypeFilterComponent} from './court-type-filter.component';
       <div class="py-6">
         <div class="flex justify-center items-center mb-4">
           <ng-icon name="heroAdjustmentsHorizontal" size="32px" color="#6a7282"></ng-icon>
-          <h3 class="font-mono text-xl font-semibold text-white px-1">
+          <h3 class="font-mono text-xl font-semibold text-gray-900 dark:text-white px-1">
             Filters
           </h3>
         </div>
-        <div class="border border-gray-300 bg-slate-900 p-6 rounded-lg w-fit">
+        <div class="border border-gray-300 dark:border-gray-300 bg-gray-50 dark:bg-slate-900 p-6 rounded-lg w-fit">
           <div class="flex gap-6">
             <app-date-filter [maxDaysAhead]="maxDaysAhead()" [(selectedDate)]="filters().date" />
             <app-duration-filters [(durationFilter)]="filters().duration" />
@@ -38,7 +38,7 @@ import {CourtTypeFilterComponent} from './court-type-filter.component';
           </div>
           <div class="flex justify-center">
             <button
-              (click)="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white font-mono font-semibold py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800">
+              (click)="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white font-mono font-semibold py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-slate-800">
               Apply Filters
             </button>
           </div>
@@ -57,5 +57,4 @@ export class PadelCourtsSearchFiltersComponent {
   applyFilters = () => {
     this.filtersApplied.emit(this.filters());
   }
-  protected readonly heroAdjustmentsHorizontal = heroAdjustmentsHorizontal;
 }
