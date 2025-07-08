@@ -1,10 +1,10 @@
 import {Component, inject, input, model, signal} from '@angular/core';
-import {PadelClub} from '../models/padel-club';
+import {PadelClub} from '../../../models/padel-club';
 import {NgIcon, provideIcons} from '@ng-icons/core';
 import {heroInformationCircle} from '@ng-icons/heroicons/outline';
-import {PcOverlayDialogComponent} from '../shared/pc-overlay-dialog/pc-overlay-dialog.component';
-import {ClubInfoComponent} from './club-info/club-info.component';
-import {AppStateService} from '../services/app-state.service';
+import {PcOverlayDialogComponent} from '../../../shared/pc-overlay-dialog/pc-overlay-dialog.component';
+import {ClubInfoComponent} from '../../club-info/club-info.component';
+import {AppStateService} from '../../../services/app-state.service';
 
 @Component({
   selector: 'app-padel-club-filters',
@@ -16,12 +16,12 @@ import {AppStateService} from '../services/app-state.service';
   providers: [provideIcons({ heroInformationCircle })],
   template: `
     <div class="mb-6">
-      <h4 class="font-mono text-lg text-white mb-3">
+      <h4 class="font-mono text-lg text-gray-900 dark:text-white mb-3">
         Clubs
       </h4>
-      <div class="max-h-48 overflow-y-auto border border-gray-600 rounded-lg p-3 bg-slate-800 max-w-96">
+      <div class="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-100 dark:bg-slate-800 max-w-96">
         @for (padelClub of padelClubs(); track padelClub.id) {
-          <label class="flex items-center space-x-2 font-mono text-white cursor-pointer py-1">
+          <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer py-1">
             <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
             <span class="text-sm">{{padelClub.name}}</span>
             <ng-icon size="20px" (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" color="#90cdf4" />

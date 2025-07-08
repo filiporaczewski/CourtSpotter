@@ -1,5 +1,5 @@
 import {Component, computed, input, signal} from '@angular/core';
-import {CourtAvailabilityGridColumn} from '../models/CourtAvailabilityGridModels';
+import {CourtAvailabilityGridColumn} from '../../models/CourtAvailabilityGridModels';
 import {CourtAvailabilityGridClubComponent} from './court-availability-grid-club.component';
 
 @Component({
