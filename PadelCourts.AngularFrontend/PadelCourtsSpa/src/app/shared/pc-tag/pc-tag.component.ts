@@ -1,11 +1,7 @@
 import {Component, Input} from '@angular/core';
-import {NgClass} from '@angular/common';
 
 @Component({
   selector: 'app-pc-tag',
-  imports: [
-    NgClass
-  ],
   template: `
     <span class="inline-flex items-center rounded-sm py-1.5 text-xs font-medium" [class]="defaultClasses">
       {{ value }}
