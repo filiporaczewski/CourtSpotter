@@ -1,23 +1,25 @@
 import {Component, computed, model} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {CourtType} from '../../../models/court-type';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 @Component({
   selector: 'app-court-type-filter',
   imports: [
-    FormsModule
+    FormsModule,
+    TranslocoPipe
   ],
   template: `
     <div class="mb-6">
-      <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">Court type</h4>
+      <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">{{ 'filters.court_type' | transloco }}</h4>
       <div class="flex justify-center flex-wrap gap-4 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3">
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
           <input type="checkbox" [checked]="isIndoor()" (change)="toggleIndoor($event)" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
-          <span>Indoor</span>
+          <span>{{ 'court_type_indoor' | transloco }}</span>
         </label>
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
           <input type="checkbox" [checked]="isOutdoor()" (change)="toggleOutdoor($event)" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
-          <span>Outdoor</span>
+          <span>{{ 'court_type_outdoor' | transloco }}</span>
         </label>
       </div>
     </div>

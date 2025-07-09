@@ -1,0 +1,27 @@
+{
+  "title": "Wyszukaj dostępne korty do padla",
+  "subtitle": "Na ten moment dostępna tylko Warszawa. Więcej lokalizacji wkrótce...",
+  "filters": {
+    "title": "Filtry",
+    "city": "Miasto",
+    "city_hardcoded": "Warszawa",
+    "city_placeholder": "(Więcej wkrótce..)",
+    "date": "Wybierz datę",
+    "duration": "Czas gry",
+    "clubs": "Kluby",
+    "court_type": "Rodzaj kortu",
+    "apply": "Zastosuj"
+  },
+  "grid": {
+    "title": "Korty dostępne {{date}}",
+    "no_results": "Brak wyników",
+    "book": "Rezerwuj",
+    "more_availabilities": "...{{count}} więcej",
+    "show_less": "Ukryj"
+  },
+  "footer": {
+    "copyright": "Wszelkie prawa zastrzeżone."
+  },
+  "court_type_indoor": "Wewnętrzny",
+  "court_type_outdoor": "Zewnętrzny"
+}

@@ -1,0 +1,27 @@
+{
+  "title": "Search available padel courts",
+  "subtitle": "For now only Warsaw is available. More locations coming soon...",
+  "filters": {
+    "title": "Filters",
+    "city": "City",
+    "city_hardcoded": "Warsaw",
+    "city_placeholder": "(More locations soon..)",
+    "date": "Select date",
+    "duration": "Duration",
+    "clubs": "Clubs",
+    "court_type": "Court type",
+    "apply": "Apply filters"
+  },
+  "grid": {
+    "title": "Courts available {{date}}",
+    "no_results": "No results",
+    "book": "Book",
+    "more_availabilities": "...{{count}} more",
+    "show_less": "Show less"
+  },
+  "footer": {
+    "copyright": "All rights reserved."
+  },
+  "court_type_indoor": "Indoor",
+  "court_type_outdoor": "Outdoor"
+}

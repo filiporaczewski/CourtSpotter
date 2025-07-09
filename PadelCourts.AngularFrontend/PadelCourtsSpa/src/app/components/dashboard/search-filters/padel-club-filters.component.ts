@@ -5,19 +5,21 @@ import {heroInformationCircle} from '@ng-icons/heroicons/outline';
 import {PcOverlayDialogComponent} from '../../../shared/pc-overlay-dialog/pc-overlay-dialog.component';
 import {ClubInfoComponent} from '../../club-info/club-info.component';
 import {AppStateService} from '../../../services/app-state.service';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 @Component({
   selector: 'app-padel-club-filters',
   imports: [
     NgIcon,
     PcOverlayDialogComponent,
-    ClubInfoComponent
+    ClubInfoComponent,
+    TranslocoPipe
   ],
   providers: [provideIcons({ heroInformationCircle })],
   template: `
     <div class="mb-6">
       <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">
-        Clubs
+        {{ 'filters.clubs' | transloco }}
       </h4>
       <div class="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-slate-800 max-w-96">
         @for (padelClub of padelClubs(); track padelClub.id) {

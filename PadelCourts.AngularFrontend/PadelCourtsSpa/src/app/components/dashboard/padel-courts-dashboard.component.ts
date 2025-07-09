@@ -13,6 +13,9 @@ import {CourtAvailabilitiesSearchFilterService} from '../../services/court-avail
 import {PadelClub} from '../../models/padel-club';
 import {PadelClubsApiService} from '../../services/rest-api/padel-clubs/padel-clubs.api.service';
 import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {LanguageSwitcherComponent} from '../language-switcher/language-switcher.component';
+import {TranslocoDatePipe} from '@jsverse/transloco-locale';
 
 @Component({
   selector: 'app-padel-courts-dashboard',
@@ -23,14 +26,22 @@ import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
     FormsModule,
     PadelCourtsSearchFiltersComponent,
     DatePipe,
-    ThemePickerComponent
+    ThemePickerComponent,
+    TranslocoPipe,
+    LanguageSwitcherComponent,
+    TranslocoDatePipe
   ],
   template: `
     @if (data$ | async; as data) {
       <section class="mb-16">
         <section class="flex flex-col items-center justify-center">
-          <div class="flex flex-col items-center mt-8 md:mb-2 md:flex-row">
-            <h2 class="font-mono text-2xl md:text-4xl px-8 font-bold text-gray-900 dark:text-white mb-1 md:mb-0">Padel courts search</h2>
+          <div class="flex flex-col items-center mt-8 md:mb-2 md:flex-row gap-3">
+            <h2 class="text-center font-mono text-xl md:text-4xl px-4 font-bold text-gray-900 dark:text-white mb-1 md:mb-0">{{ 'title' | transloco }}</h2>
+            <app-language-switcher class="md:block hidden" />
+            <app-theme-picker class="md:block hidden" />
+          </div>
+          <div class="md:hidden flex gap-2 mt-4">
+            <app-language-switcher />
             <app-theme-picker />
           </div>
           @if(filters$ | async; as filters) {
@@ -38,9 +49,9 @@ import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
               <app-padel-courts-search-filters [maxDaysAhead]="14" [filters]="filters" [padelClubs]="padelClubs" (filtersApplied)="applyFilters($event)" />
             }
             @if(!data.noData) {
-              <h3 class="font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">Courts available on {{filters.date | date}}</h3>
+              <h3 class="font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">{{ 'grid.title' | transloco: { date: filters.date | translocoDate} }}</h3>
             } @else {
-              <h3 class="font-bold font-mono px-8 mb-6 text-l md:text-2xl text-gray-900 dark:text-white">No results</h3>
+              <h3 class="font-bold font-mono px-8 mb-6 text-l md:text-2xl text-gray-900 dark:text-white">{{ 'grid.no_results' | transloco }}</h3>
             }
           }
         </section>
