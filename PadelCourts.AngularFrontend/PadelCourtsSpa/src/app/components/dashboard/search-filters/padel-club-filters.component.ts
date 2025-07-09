@@ -24,7 +24,7 @@ import {AppStateService} from '../../../services/app-state.service';
           <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer py-1">
             <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
             <span class="text-sm">{{padelClub.name}}</span>
-            <ng-icon size="20px" (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" color="#90cdf4" />
+            <ng-icon size="20px" (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" />
           </label>
         }
       </div>
