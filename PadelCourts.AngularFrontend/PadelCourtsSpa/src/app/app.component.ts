@@ -12,7 +12,7 @@ import {AsyncPipe} from '@angular/common';
   template: `
     @if(themeClass$ | async ; as themeClass) {
       <div [class]="themeClass">
-        <div class="h-screen bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-300">
+        <div class="min-h-screen bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-300">
           <app-padel-courts-dashboard />
           <app-footer />
           <router-outlet />
