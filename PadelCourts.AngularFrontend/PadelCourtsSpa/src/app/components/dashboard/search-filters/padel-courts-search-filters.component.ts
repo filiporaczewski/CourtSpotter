@@ -21,7 +21,7 @@ import {CourtTypeFilterComponent} from './court-type-filter.component';
   ],
   providers: [provideIcons({ heroAdjustmentsHorizontal })],
   template: `
-    <div class="px-8 pb-6">
+    <div class="px-4 md:px-8 pb-6">
       <div class="py-6">
         <div class="flex justify-center items-center mb-4">
           <ng-icon name="heroAdjustmentsHorizontal" size="32px" color="#6a7282"></ng-icon>
@@ -29,8 +29,8 @@ import {CourtTypeFilterComponent} from './court-type-filter.component';
             Filters
           </h3>
         </div>
-        <div class="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-slate-900 p-6 rounded-lg w-fit">
-          <div class="flex gap-6">
+        <div class="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-slate-900 p-4 md:p-6 rounded-lg w-fit">
+          <div class="flex flex-col md:flex-row md:gap-6">
             <app-date-filter [maxDaysAhead]="maxDaysAhead()" [(selectedDate)]="filters().date" />
             <app-duration-filters [(durationFilter)]="filters().duration" />
             <app-padel-club-filters [(clubIds)]="filters().clubIds" [padelClubs]="padelClubs()" />

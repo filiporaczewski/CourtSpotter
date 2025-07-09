@@ -29,8 +29,8 @@ import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
     @if (data$ | async; as data) {
       <section class="mb-16">
         <section class="flex flex-col items-center justify-center">
-          <div class="flex items-center mt-8 mb-2">
-            <h2 class="font-mono text-4xl px-8 font-bold text-gray-900 dark:text-white">Padel courts search</h2>
+          <div class="flex flex-col items-center mt-8 md:mb-2 md:flex-row">
+            <h2 class="font-mono text-2xl md:text-4xl px-8 font-bold text-gray-900 dark:text-white mb-1 md:mb-0">Padel courts search</h2>
             <app-theme-picker />
           </div>
           @if(filters$ | async; as filters) {
@@ -38,14 +38,14 @@ import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
               <app-padel-courts-search-filters [maxDaysAhead]="14" [filters]="filters" [padelClubs]="padelClubs" (filtersApplied)="applyFilters($event)" />
             }
             @if(!data.noData) {
-              <h3 class="font-bold font-mono px-8 mb-6 text-2xl text-gray-900 dark:text-white">Courts available on {{filters.date | date}}</h3>
+              <h3 class="font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">Courts available on {{filters.date | date}}</h3>
             } @else {
-              <h3 class="font-bold font-mono px-8 mb-6 text-2xl text-gray-900 dark:text-white">No results</h3>
+              <h3 class="font-bold font-mono px-8 mb-6 text-l md:text-2xl text-gray-900 dark:text-white">No results</h3>
             }
           }
         </section>
         @if(!data.noData) {
-          <div class="w-fit max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">
+          <div class="w-fit max-w-[95%] lg:max-w-[90%] xl:max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">
             <div class="flex min-w-max">
               @for(item of data.items; track $index) {
                 @if(item.gridClubs.length !== 0) {
