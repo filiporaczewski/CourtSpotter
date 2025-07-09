@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import {AppStateService} from '../../services/app-state.service';
 import {AsyncPipe} from '@angular/common';
 import {DomSanitizer} from '@angular/platform-browser';
