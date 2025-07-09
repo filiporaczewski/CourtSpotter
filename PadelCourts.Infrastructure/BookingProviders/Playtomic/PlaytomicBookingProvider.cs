@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PadelCourts.Core.Contracts;
 using PadelCourts.Core.Models;
 using PadelCourts.Core.Results;
@@ -13,14 +14,19 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
     private readonly IServiceProvider _serviceProvider;
     private readonly TimeZoneInfo _localTimeZone;
     private readonly TimeZoneInfo _apiTimeZone;
+    private readonly int _earliestPossibleBookingHour;
+    private readonly int _latestPossibleBookingHour;
+    private readonly string _baseUrl;
 
-    public PlaytomicBookingProvider(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider)
+    public PlaytomicBookingProvider(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider, IOptions<PlaytomicProviderOptions> options)
     {
         _httpClient = httpClientFactory.CreateClient("PlaytomicClient");
         _serviceProvider = serviceProvider;
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
-        _apiTimeZone = TimeZoneInfo.Utc; // Assuming Playtomic API uses UTC
-
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.LocalTimeZoneId);
+        _apiTimeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.ApiTimeZoneId);
+        _earliestPossibleBookingHour = options.Value.EarliestBookingHour;
+        _latestPossibleBookingHour = options.Value.LatestBookingHour;
+        _baseUrl = options.Value.ApiBaseUrl;
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
@@ -68,7 +74,7 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
     private async Task<DailyCourtBookingAvailabilitiesSyncResult> GetCourtAvailabilitiesSingleDay(PadelClub padelClub, DateTime date, IEnumerable<PlaytomicCourt> bookableCourts, CancellationToken cancellationToken = default)
     {
         var dateString = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var dailyAvailabilitiesBookingEndpointUrl = $"https://playtomic.com/api/clubs/availability?tenant_id={padelClub.ClubId}&date={dateString}&sport_id=PADEL";
+        var dailyAvailabilitiesBookingEndpointUrl = BuildAvailabilityUrl(_baseUrl, padelClub.ClubId, dateString);
 
         try
         { 
@@ -161,9 +167,8 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
         }
     
         var hour = startDateTime.Value.Hour;
-        return !(hour is >= 23 or < 6);
+        return hour >= _earliestPossibleBookingHour && hour <= _latestPossibleBookingHour;
     }
-
 
     private (DateTime? startDateTime, DateTime? endDateTime) ConvertSlotToLocalTime(TimeSlot slot, DateTime date)
     {
@@ -178,16 +183,24 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
         return (localStartDateTime, localEndDateTime);
     }
 
-    
-    private string GetUrlSuffix(string clubName)
-    {
-        return clubName.ToLowerInvariant().Replace(" ", "-");
-    }
+    private static string BuildAvailabilityUrl(string baseUrl, string clubId, string date) => $"{baseUrl}/api/clubs/availability?tenant_id={clubId}&date={date}&sport_id=PADEL";
 
-    private (decimal, string) GetPriceAndCurrency(string price)
+    private static string GetUrlSuffix(string clubName) => clubName.ToLowerInvariant().Replace(" ", "-");
+
+    private static (decimal, string) GetPriceAndCurrency(string price)
     {
-        var priceParts = price.Split(' ');
-        var priceValue = decimal.Parse(priceParts[0]);
+        if (string.IsNullOrEmpty(price))
+        {
+            return (0, string.Empty);
+        }
+        
+        var priceParts = price.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (priceParts.Length < 2 || !decimal.TryParse(priceParts[0], NumberStyles.Currency, CultureInfo.InvariantCulture, out var priceValue))
+        {
+            return (0, string.Empty);
+        }
+
         var currency = priceParts[1];
         return (priceValue, currency);
     }

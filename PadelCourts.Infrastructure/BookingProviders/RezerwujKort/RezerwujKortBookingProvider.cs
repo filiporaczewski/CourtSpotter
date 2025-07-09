@@ -12,11 +12,13 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
     private readonly CaseInsensitiveJsonSerializerOptions _serializerOptions;
     private const string BookableHourStatus = "OPEN";
     private const string BaseUrl = "https://www.rezerwujkort.pl";
+    private readonly TimeProvider _timeProvider;
     
-    public RezerwujKortBookingProvider(IHttpClientFactory httpClientFactory, CaseInsensitiveJsonSerializerOptions caseInsensitiveJsonSerializerOptions)
+    public RezerwujKortBookingProvider(IHttpClientFactory httpClientFactory, CaseInsensitiveJsonSerializerOptions caseInsensitiveJsonSerializerOptions, TimeProvider timeProvider)
     {
         _httpClient = httpClientFactory.CreateClient("RezerwujKortClient") ?? throw new InvalidOperationException("HttpClient 'RezerwujKortClient' is not configured");
         _serializerOptions = caseInsensitiveJsonSerializerOptions ?? throw new ArgumentNullException(nameof(caseInsensitiveJsonSerializerOptions));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate,
@@ -65,11 +67,8 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
 
         try
         {
-            var dailyCourtBookingAvailabilitiesEndpointRawResponse =
-                await _httpClient.GetStringAsync(dailyCourtBookingAvailabilitiesEndpoint, cancellationToken);
-            var dailyCourtBookingAvailabilitiesEndpointJsonResponse =
-                JsonSerializer.Deserialize<DailyCourtBookingAvailabilitiesEndpointApiResponse>(
-                    dailyCourtBookingAvailabilitiesEndpointRawResponse, _serializerOptions.Value);
+            var dailyCourtBookingAvailabilitiesEndpointRawResponse = await _httpClient.GetStringAsync(dailyCourtBookingAvailabilitiesEndpoint, cancellationToken);
+            var dailyCourtBookingAvailabilitiesEndpointJsonResponse = JsonSerializer.Deserialize<DailyCourtBookingAvailabilitiesEndpointApiResponse>(dailyCourtBookingAvailabilitiesEndpointRawResponse, _serializerOptions.Value);
 
             if (dailyCourtBookingAvailabilitiesEndpointJsonResponse?.Courts == null)
             {
@@ -100,7 +99,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                     }
 
                     var bookingAvailabilityStartDateTime = date.Add(bookableHourTimeSpan);
-                    var currentDate = DateTime.Now;
+                    var currentDate = _timeProvider.GetLocalNow().DateTime;
 
                     if (bookingAvailabilityStartDateTime < currentDate)
                     {
@@ -116,8 +115,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                             continue;
                         }
 
-                        var bookingAvailabilityEndDateTime =
-                            bookingAvailabilityStartDateTime.AddMinutes(availabilityDurationInMinutes);
+                        var bookingAvailabilityEndDateTime = bookingAvailabilityStartDateTime.AddMinutes(availabilityDurationInMinutes);
 
                         availabilities.Add(new CourtAvailability
                         {

@@ -1,3 +1,4 @@
+using PadelCourts.Infrastructure.BookingProviders.Playtomic;
 using WebApplication1.BackgroundServices;
 using WebApplication1.Endpoints;
 using WebApplication1.Extensions;
@@ -5,10 +6,12 @@ using WebApplication1.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<CourtBookingAvailabilitiesSyncOptions>(builder.Configuration.GetSection("CourtBookingAvailabilitiesSync"));
+builder.Services.Configure<PlaytomicProviderOptions>(builder.Configuration.GetSection("PlaytomicProviderOptions"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddInfrastructure(builder.Configuration, builder.Logging, builder.Environment);
 builder.Services.AddBookingProviders(builder.Configuration);
 builder.Services.AddHostedService<CourtBookingAvailabilitiesSyncingService>();
