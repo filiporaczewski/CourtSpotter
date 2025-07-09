@@ -1,15 +1,17 @@
 import {Component, model} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {DurationFilters} from '../../../models/duration-filters';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 @Component({
   selector: 'app-duration-filters',
   imports: [
-    FormsModule
+    FormsModule,
+    TranslocoPipe
   ],
   template: `
     <div class="mb-6">
-      <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">Duration</h4>
+      <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">{{ 'filters.duration' | transloco }}</h4>
       <div class="flex justify-center flex-wrap gap-4 bg-white dark:bg-slate-800 max-w-96 border border-gray-300 dark:border-gray-600 rounded-lg p-3">
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
           <input type="checkbox" [(ngModel)]="durationFilter().duration60" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">

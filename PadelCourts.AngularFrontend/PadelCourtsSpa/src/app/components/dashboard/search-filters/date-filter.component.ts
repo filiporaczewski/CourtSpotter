@@ -1,15 +1,17 @@
 import { FormsModule } from '@angular/forms';
 import {Component, computed, input, model} from '@angular/core';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 @Component({
   selector: 'app-date-filter',
   imports: [
-    FormsModule
+    FormsModule,
+    TranslocoPipe
   ],
   template: `
     <div class="mb-6 max-w-96">
       <label class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3 block">
-        Select Date
+        {{ 'filters.date' | transloco }}
       </label>
       <input
         type="date"

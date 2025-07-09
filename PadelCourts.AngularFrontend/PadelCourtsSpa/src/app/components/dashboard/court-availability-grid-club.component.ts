@@ -1,11 +1,13 @@
 import {Component, computed, input, signal} from '@angular/core';
 import {CourtAvailabilityGridClub} from '../../models/CourtAvailabilityGridModels';
 import {GridCourtAvailabilityComponent} from './grid-court-availability.component';
+import {TranslocoPipe} from '@jsverse/transloco';
 
 @Component({
   selector: 'app-court-availability-grid-club',
   imports: [
-    GridCourtAvailabilityComponent
+    GridCourtAvailabilityComponent,
+    TranslocoPipe
   ],
   template: `
     <div class="text-center">
@@ -23,7 +25,7 @@ import {GridCourtAvailabilityComponent} from './grid-court-availability.componen
           <button
             class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm mt-2 cursor-pointer underline mb-2"
             (click)="toggleExpanded()">
-            ...{{excessiveAvailabilitiesCount()}} more availabilities
+            {{ 'grid.more_availabilities' | transloco: { count: excessiveAvailabilitiesCount() } }}
           </button>
         } @else {
           @for (availability of club().availabilities; track $index) {
@@ -32,7 +34,7 @@ import {GridCourtAvailabilityComponent} from './grid-court-availability.componen
           <button
             class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm mt-2 cursor-pointer underline mb-2"
             (click)="toggleExpanded()">
-            Show less
+            {{ 'grid.show_less' | transloco }}
           </button>
         }
       }
