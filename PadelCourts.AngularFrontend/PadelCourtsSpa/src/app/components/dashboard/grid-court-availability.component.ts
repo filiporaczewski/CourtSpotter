@@ -16,7 +16,7 @@ import {PcTagComponent} from '../../shared/pc-tag/pc-tag.component';
           @if(isIndoor()) {
             <app-pc-tag value="Indoor" backgroundColorClass="bg-gray-800 dark:bg-slate-950" textColorClass="text-white" />
           } @else {
-            <app-pc-tag value="Outdoor" backgroundColorClass="bg-green-700 dark:bg-green-800" textColorClass="text-white" />
+            <app-pc-tag value="Outdoor" backgroundColorClass="bg-green-500 dark:bg-green-800" textColorClass="text-white" />
           }
         </span>
 
@@ -44,20 +44,20 @@ export class GridCourtAvailabilityComponent {
       case 60:
         return {
           text: '1h',
-          bgColorClass: 'bg-blue-600 dark:bg-blue-600',
-          textColorClass: 'text-white'
+          bgColorClass: 'bg-blue-200 dark:bg-blue-600',
+          textColorClass: 'text-gray-900 dark:text-white'
         }
       case 90:
         return {
           text: '1.5h',
-          bgColorClass: 'bg-blue-600 dark:bg-blue-600',
-          textColorClass: 'text-white'
+          bgColorClass: 'bg-blue-200 dark:bg-blue-600',
+          textColorClass: 'text-gray-900 dark:text-white'
         }
       default:
         return {
           text: '2h',
-          bgColorClass: 'bg-blue-600 dark:bg-blue-600',
-          textColorClass: 'text-white'
+          bgColorClass: 'bg-blue-200 dark:bg-blue-600',
+          textColorClass: 'text-gray-900 dark:text-white'
         }
     }
   }

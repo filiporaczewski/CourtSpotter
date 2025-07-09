@@ -10,13 +10,13 @@ import {CourtType} from '../../../models/court-type';
   template: `
     <div class="mb-6">
       <h4 class="font-mono text-lg text-gray-900 dark:text-white mb-3">Court type</h4>
-      <div class="flex flex-wrap gap-4 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+      <div class="flex flex-wrap gap-4 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-lg p-3">
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
-          <input type="checkbox" [checked]="isIndoor()" (change)="toggleIndoor($event)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+          <input type="checkbox" [checked]="isIndoor()" (change)="toggleIndoor($event)" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
           <span>Indoor</span>
         </label>
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
-          <input type="checkbox" [checked]="isOutdoor()" (change)="toggleOutdoor($event)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+          <input type="checkbox" [checked]="isOutdoor()" (change)="toggleOutdoor($event)" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
           <span>Outdoor</span>
         </label>
       </div>

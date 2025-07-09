@@ -19,10 +19,10 @@ import {AppStateService} from '../../../services/app-state.service';
       <h4 class="font-mono text-lg text-gray-900 dark:text-white mb-3">
         Clubs
       </h4>
-      <div class="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-100 dark:bg-slate-800 max-w-96">
+      <div class="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-slate-800 max-w-96">
         @for (padelClub of padelClubs(); track padelClub.id) {
           <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer py-1">
-            <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+            <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
             <span class="text-sm">{{padelClub.name}}</span>
             <ng-icon size="20px" (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" color="#90cdf4" />
           </label>

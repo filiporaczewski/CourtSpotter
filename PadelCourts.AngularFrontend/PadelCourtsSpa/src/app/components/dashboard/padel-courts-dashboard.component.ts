@@ -45,13 +45,13 @@ import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
           }
         </section>
         @if(!data.noData) {
-          <div class="w-fit max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+          <div class="w-fit max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">
             <div class="flex min-w-max">
               @for(item of data.items; track $index) {
                 @if(item.gridClubs.length !== 0) {
-                  <div class="flex-1 w-[250px] min-w-fit border-r border-gray-300 dark:border-gray-600 last:border-r-0 bg-gray-50 dark:bg-slate-900">
+                  <div class="flex-1 w-[250px] min-w-fit border-r border-gray-300 dark:border-gray-600 last:border-r-0 bg-gray-100 dark:bg-slate-900">
                     <!-- Header -->
-                    <div class="bg-gray-200 dark:bg-slate-800 p-4 border-b border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white font-bold top-0 z-10">
+                    <div class="bg-white dark:bg-slate-800 p-4 border-b border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white font-bold sticky top-0 z-10">
                       <div>{{ item | bookingTime }}</div>
                     </div>
                     <!-- Content -->

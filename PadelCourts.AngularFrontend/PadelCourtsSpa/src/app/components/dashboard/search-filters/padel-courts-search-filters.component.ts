@@ -29,7 +29,7 @@ import {CourtTypeFilterComponent} from './court-type-filter.component';
             Filters
           </h3>
         </div>
-        <div class="border border-gray-300 dark:border-gray-300 bg-gray-50 dark:bg-slate-900 p-6 rounded-lg w-fit">
+        <div class="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-slate-900 p-6 rounded-lg w-fit">
           <div class="flex gap-6">
             <app-date-filter [maxDaysAhead]="maxDaysAhead()" [(selectedDate)]="filters().date" />
             <app-duration-filters [(durationFilter)]="filters().duration" />
@@ -38,7 +38,7 @@ import {CourtTypeFilterComponent} from './court-type-filter.component';
           </div>
           <div class="flex justify-center">
             <button
-              (click)="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white font-mono font-semibold py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-slate-800">
+              (click)="applyFilters()" class="cursor-pointer dark:bg-blue-600 bg-green-500 hover:bg-green-600 dark:hover:bg-blue-700 text-white font-mono font-semibold py-2 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-slate-800">
               Apply Filters
             </button>
           </div>
