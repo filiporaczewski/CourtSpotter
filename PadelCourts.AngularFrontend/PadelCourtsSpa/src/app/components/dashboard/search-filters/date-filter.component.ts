@@ -8,7 +8,7 @@ import {Component, computed, input, model} from '@angular/core';
   ],
   template: `
     <div class="mb-6 max-w-96">
-      <label class="font-mono text-lg text-gray-900 dark:text-white mb-3 block">
+      <label class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3 block">
         Select Date
       </label>
       <input
