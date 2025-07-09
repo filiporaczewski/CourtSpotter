@@ -1,4 +1,4 @@
-import {Component, inject, input, model, signal} from '@angular/core';
+import {Component, inject, input, model} from '@angular/core';
 import {PadelClub} from '../../../models/padel-club';
 import {NgIcon, provideIcons} from '@ng-icons/core';
 import {heroInformationCircle} from '@ng-icons/heroicons/outline';
