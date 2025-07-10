@@ -51,8 +51,6 @@ export class CourtAvailabilitiesSearchFilterService {
 
     const durations = CourtAvailabilitiesSearchFilterService.getSelectedDurations(filters.duration);
 
-    debugger;
-
     if (durations.length > 0) {
       queryParams['durations'] = durations;
     }
