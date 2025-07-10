@@ -25,10 +25,10 @@ export class ThemeService {
 
   logoSrc$ = this.themeClass$.pipe(map(theme => {
     if (theme === 'light') {
-      return '/images/court_spotter_logo_light.png'
+      return 'images/court_spotter_logo_light.png'
     }
 
-    return '/images/court_spotter_logo_dark.png'
+    return 'images/court_spotter_logo_dark.png'
   }));
 
   initializeTheme = (): void => {
