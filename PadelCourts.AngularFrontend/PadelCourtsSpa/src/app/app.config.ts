@@ -6,23 +6,29 @@ import {provideHttpClient} from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import {provideTranslocoLocale} from '@jsverse/transloco-locale';
+import {provideTranslocoPersistLang} from '@jsverse/transloco-persist-lang';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-        provideZoneChangeDetection({ eventCoalescing: true }),
-        provideRouter(routes),
-        provideHttpClient(),
-        provideHttpClient(),
-        provideTransloco({
-          config: {
-              availableLangs: ['en', 'pl'],
-              defaultLang: 'en',
-              // Remove this option if your application doesn't support changing language in runtime.
-              reRenderOnLangChange: true,
-              prodMode: !isDevMode(),
-            },
-            loader: TranslocoHttpLoader
-          }),
-        provideTranslocoLocale()
-        ]
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideHttpClient(),
+    provideHttpClient(),
+    provideTransloco({
+      config: {
+          availableLangs: ['en', 'pl'],
+          defaultLang: 'en',
+          // Remove this option if your application doesn't support changing language in runtime.
+          reRenderOnLangChange: true,
+          prodMode: !isDevMode(),
+        },
+        loader: TranslocoHttpLoader
+      }),
+    provideTranslocoLocale(),
+    provideTranslocoPersistLang({
+      storage: {
+        useValue: localStorage
+      }
+    })
+  ]
 };

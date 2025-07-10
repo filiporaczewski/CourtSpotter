@@ -14,17 +14,17 @@ import {TranslocoPipe} from '@jsverse/transloco';
       <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">{{ 'filters.duration' | transloco }}</h4>
       <div class="flex justify-center flex-wrap gap-4 bg-white dark:bg-slate-800 max-w-96 border border-gray-300 dark:border-gray-600 rounded-lg p-3">
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
-          <input type="checkbox" [(ngModel)]="durationFilter().duration60" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+          <input type="checkbox" [checked]="durationFilter().duration60" [(ngModel)]="durationFilter().duration60" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
           <span>1h</span>
         </label>
 
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
-          <input type="checkbox" [(ngModel)]="durationFilter().duration90" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+          <input type="checkbox" [checked]="durationFilter().duration90" [(ngModel)]="durationFilter().duration90" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
           <span>1.5h</span>
         </label>
 
         <label class="flex items-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer">
-          <input type="checkbox" [(ngModel)]="durationFilter().duration120" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+          <input type="checkbox" [checked]="durationFilter().duration120" [(ngModel)]="durationFilter().duration120" class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
           <span>2h</span>
         </label>
       </div>

@@ -1,9 +1,9 @@
-import {Component, inject, OnInit} from '@angular/core';
+import {Component, DestroyRef, inject, OnInit} from '@angular/core';
 import {CourtAvailabilityGridData} from '../../models/CourtAvailabilityGridModels';
-import {map, Observable} from 'rxjs';
+import {combineLatest, distinctUntilChanged, map, Observable} from 'rxjs';
 import {PadelCourtAvailabilitiesApiService} from '../../services/rest-api/court-availabilities/padel-court-availabilities.api.service';
 import {CourtAvailabilityDataTransformationService} from '../../services/court-availability-data-transformation.service';
-import {AsyncPipe, DatePipe} from '@angular/common';
+import {AsyncPipe} from '@angular/common';
 import {CourtAvailabilityGridColumnComponent} from './court-availability-grid-column.component';
 import {BookingTimePipe} from '../../pipes/booking-time.pipe';
 import {FormsModule} from '@angular/forms';
@@ -16,6 +16,8 @@ import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {LanguageSwitcherComponent} from '../language-switcher/language-switcher.component';
 import {TranslocoDatePipe} from '@jsverse/transloco-locale';
+import {ActivatedRoute, Router} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-padel-courts-dashboard',
@@ -25,7 +27,6 @@ import {TranslocoDatePipe} from '@jsverse/transloco-locale';
     BookingTimePipe,
     FormsModule,
     PadelCourtsSearchFiltersComponent,
-    DatePipe,
     ThemePickerComponent,
     TranslocoPipe,
     LanguageSwitcherComponent,
@@ -49,7 +50,7 @@ import {TranslocoDatePipe} from '@jsverse/transloco-locale';
               <app-padel-courts-search-filters [maxDaysAhead]="14" [filters]="filters" [padelClubs]="padelClubs" (filtersApplied)="applyFilters($event)" />
             }
             @if(!data.noData) {
-              <h3 class="font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">{{ 'grid.title' | transloco: { date: filters.date | translocoDate} }}</h3>
+              <h3 class="font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">{{ 'grid.title' | transloco: { date: date | translocoDate} }}</h3>
             } @else {
               <h3 class="font-bold font-mono px-8 mb-6 text-l md:text-2xl text-gray-900 dark:text-white">{{ 'grid.no_results' | transloco }}</h3>
             }
@@ -88,35 +89,52 @@ export class PadelCourtsDashboardComponent implements OnInit {
   private padelClubsApiService = inject(PadelClubsApiService);
   private gridDataTransformService = inject(CourtAvailabilityDataTransformationService);
   private filtersService = inject(CourtAvailabilitiesSearchFilterService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   data$?: Observable<CourtAvailabilityGridData>;
   filters$?: Observable<CourtAvailabilitiesSearchFilters>;
   padelClubs$?: Observable<PadelClub[]>;
 
+  date: Date = new Date();
+
   applyFilters(filters: CourtAvailabilitiesSearchFilters): void {
-    this.filtersService.updateFilters(filters);
-    this.loadData(filters);
+    const queryParams = CourtAvailabilitiesSearchFilterService.constructQueryParamsFromFilters(filters);
+    void this.router.navigate(['/courts'], { queryParams });
   }
 
   private loadData(filters?: CourtAvailabilitiesSearchFilters): void {
-    const selectedDurations = (filters && filters.duration) ? this.filtersService.getSelectedDurations(filters.duration) : undefined;
+    const selectedDurations = (filters && filters.duration) ? CourtAvailabilitiesSearchFilterService.getSelectedDurations(filters.duration) : undefined;
     const selectedClubIds = (filters && filters.clubIds) ? Array.from(filters.clubIds) : undefined;
     const date = (filters && filters.date) ? filters.date : new Date();
     const courtType = (filters && filters.courtType !== null) ? filters.courtType : undefined
+    this.date = date;
 
     this.data$ = this.courtAvailabilitiesApiService.getAvailabilities(date, selectedDurations, selectedClubIds, courtType)
       .pipe(map(response => this.gridDataTransformService.transformToGridData(response)));
   }
 
   ngOnInit(): void {
-    this.filters$ = this.filtersService.filters$;
+    this.filters$ = combineLatest([
+      this.filtersService.filters$,
+      this.route.queryParams
+    ]).pipe(
+      map(([filters, queryParams]) => {
+        return CourtAvailabilitiesSearchFilterService.updateFiltersFromQueryParams(queryParams, filters);
+      }),
+      distinctUntilChanged()
+    )
+
+    this.filters$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((filters) => {
+      this.loadData(filters);
+    })
+
     this.padelClubs$ = this.padelClubsApiService.getClubs().pipe(map(response => {
       return response.clubs.map(dto => ({
         name: dto.name,
         id: dto.clubId
       }))
     }));
-
-    this.loadData();
   }
 }
