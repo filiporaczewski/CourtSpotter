@@ -1,0 +1,134 @@
+import {Component, DestroyRef, inject, OnInit} from '@angular/core';
+import {CourtAvailabilityGridData} from '../../models/CourtAvailabilityGridModels';
+import {combineLatest, distinctUntilChanged, map, Observable} from 'rxjs';
+import {PadelCourtAvailabilitiesApiService} from '../../services/rest-api/court-availabilities/padel-court-availabilities.api.service';
+import {CourtAvailabilityDataTransformationService} from '../../services/court-availability-data-transformation.service';
+import {AsyncPipe} from '@angular/common';
+import {CourtAvailabilityGridColumnComponent} from './court-availability-grid-column.component';
+import {BookingTimePipe} from '../../pipes/booking-time.pipe';
+import {FormsModule} from '@angular/forms';
+import {PadelCourtsSearchFiltersComponent} from './search-filters/padel-courts-search-filters.component';
+import {CourtAvailabilitiesSearchFilters} from '../../models/court-availabilities-search-filters';
+import {CourtAvailabilitiesSearchFilterService} from '../../services/court-availabilities-search-filter.service';
+import {PadelClub} from '../../models/padel-club';
+import {PadelClubsApiService} from '../../services/rest-api/padel-clubs/padel-clubs.api.service';
+import {ThemePickerComponent} from '../theme-picker/theme-picker.component';
+import {TranslocoPipe} from '@jsverse/transloco';
+import {LanguageSwitcherComponent} from '../language-switcher/language-switcher.component';
+import {TranslocoDatePipe} from '@jsverse/transloco-locale';
+import {ActivatedRoute, Router} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+
+@Component({
+  selector: 'app-padel-courts-dashboard',
+  imports: [
+    AsyncPipe,
+    CourtAvailabilityGridColumnComponent,
+    BookingTimePipe,
+    FormsModule,
+    PadelCourtsSearchFiltersComponent,
+    ThemePickerComponent,
+    TranslocoPipe,
+    LanguageSwitcherComponent,
+    TranslocoDatePipe
+  ],
+  template: `
+    @if (data$ | async; as data) {
+      <section class="mb-16">
+        <section class="flex flex-col items-center justify-center">
+          <div class="flex flex-col items-center mt-8 md:mb-2 md:flex-row gap-3">
+            <h2 class="text-center font-mono text-xl md:text-4xl px-4 font-bold text-gray-900 dark:text-white mb-1 md:mb-0">{{ 'title' | transloco }}</h2>
+          </div>
+          @if(filters$ | async; as filters) {
+            @if(padelClubs$ | async; as padelClubs) {
+              <app-padel-courts-search-filters [maxDaysAhead]="14" [filters]="filters" [padelClubs]="padelClubs" (filtersApplied)="applyFilters($event)" />
+            }
+            @if(!data.noData) {
+              <h3 class="font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">{{ 'grid.title' | transloco: { date: date | translocoDate} }}</h3>
+            } @else {
+              <h3 class="font-bold font-mono px-8 mb-6 text-l md:text-2xl text-gray-900 dark:text-white">{{ 'grid.no_results' | transloco }}</h3>
+            }
+          }
+        </section>
+        @if(!data.noData) {
+          <div class="w-fit max-w-[95%] lg:max-w-[90%] xl:max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">
+            <div class="flex min-w-max">
+              @for(item of data.items; track $index) {
+                @if(item.gridClubs.length !== 0) {
+                  <div class="flex-1 w-[250px] min-w-fit border-r border-gray-300 dark:border-gray-600 last:border-r-0 bg-gray-100 dark:bg-slate-900">
+                    <!-- Header -->
+                    <div class="bg-white dark:bg-slate-800 p-4 border-b border-gray-300 dark:border-gray-600 text-center text-gray-900 dark:text-white font-bold sticky top-0 z-10">
+                      <div>{{ item | bookingTime }}</div>
+                    </div>
+                    <!-- Content -->
+                    <div class="p-4 min-h-[200px]">
+                      <app-court-availability-grid-column [column]="item" />
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+  `,
+  styles: [
+    `
+    `
+  ]
+})
+export class CourtSpotterDashboardComponent implements OnInit {
+  private courtAvailabilitiesApiService = inject(PadelCourtAvailabilitiesApiService);
+  private padelClubsApiService = inject(PadelClubsApiService);
+  private gridDataTransformService = inject(CourtAvailabilityDataTransformationService);
+  private filtersService = inject(CourtAvailabilitiesSearchFilterService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+
+  data$?: Observable<CourtAvailabilityGridData>;
+  filters$?: Observable<CourtAvailabilitiesSearchFilters>;
+  padelClubs$?: Observable<PadelClub[]>;
+
+  date: Date = new Date();
+
+  applyFilters(filters: CourtAvailabilitiesSearchFilters): void {
+    const queryParams = CourtAvailabilitiesSearchFilterService.constructQueryParamsFromFilters(filters);
+    void this.router.navigate(['/courts'], { queryParams });
+  }
+
+  private loadData(filters?: CourtAvailabilitiesSearchFilters): void {
+    const selectedDurations = (filters && filters.duration) ? CourtAvailabilitiesSearchFilterService.getSelectedDurations(filters.duration) : undefined;
+    const selectedClubIds = (filters && filters.clubIds) ? Array.from(filters.clubIds) : undefined;
+    const date = (filters && filters.date) ? filters.date : new Date();
+    const courtType = (filters && filters.courtType !== null) ? filters.courtType : undefined
+    this.date = date;
+
+    this.data$ = this.courtAvailabilitiesApiService.getAvailabilities(date, selectedDurations, selectedClubIds, courtType)
+      .pipe(map(response => this.gridDataTransformService.transformToGridData(response)));
+  }
+
+  ngOnInit(): void {
+    this.filters$ = combineLatest([
+      this.filtersService.filters$,
+      this.route.queryParams
+    ]).pipe(
+      map(([filters, queryParams]) => {
+        return CourtAvailabilitiesSearchFilterService.updateFiltersFromQueryParams(queryParams, filters);
+      }),
+      distinctUntilChanged()
+    )
+
+    this.filters$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((filters) => {
+      this.loadData(filters);
+    })
+
+    this.padelClubs$ = this.padelClubsApiService.getClubs().pipe(map(response => {
+      return response.clubs.map(dto => ({
+        name: dto.name,
+        id: dto.clubId
+      }))
+    }));
+  }
+}

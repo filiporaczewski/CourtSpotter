@@ -1,0 +1,16 @@
+﻿using PadelCourts.Core.Models;
+
+namespace CourtSpotter.DTOs;
+
+public record CourtAvailabilityDto(
+    string Id,
+    string ClubName,
+    string CourtName,
+    DateTime DateTime,
+    decimal Price,
+    string Currency,
+    string BookingUrl,
+    string Provider,
+    int DurationInMinutes,
+    CourtType CourtType
+);

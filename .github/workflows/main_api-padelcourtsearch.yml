@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - 'PadelCourts.API/**'
-      - 'PadelCourts.Core/**'
-      - 'PadelCourts.Infrastructure/**'
+      - 'CourtSpotter.API/**'
+      - 'CourtSpotter.Core/**'
+      - 'CourtSpotter.Infrastructure/**'
       - '*.sln'
   workflow_dispatch:
 
@@ -26,13 +26,13 @@ jobs:
           dotnet-version: '8.0'
 
       - name: Restore dependencies
-        run: dotnet restore WebApplication1.sln
+        run: dotnet restore CourtSpotter.sln
 
       - name: Build solution
-        run: dotnet build WebApplication1.sln --configuration Release --no-restore
+        run: dotnet build CourtSpotter.sln --configuration Release --no-restore
 
       - name: Publish API project
-        run: dotnet publish PadelCourts.API/PadelCourts.API.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp --no-build
+        run: dotnet publish CourtSpotter.API/CourtSpotter.API.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp --no-build
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
