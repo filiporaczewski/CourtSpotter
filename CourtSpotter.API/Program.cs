@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddInfrastructure(builder.Configuration, builder.Logging, builder.Environment);
 builder.Services.AddBookingProviders(builder.Configuration);
-// builder.Services.AddHostedService<CourtBookingAvailabilitiesSyncingService>();
+builder.Services.AddHostedService<CourtBookingAvailabilitiesSyncingService>();
 
 if (builder.Environment.IsDevelopment())
 {
