@@ -1,7 +1,7 @@
-using PadelCourts.Infrastructure.BookingProviders.Playtomic;
 using CourtSpotter.BackgroundServices;
 using CourtSpotter.Endpoints;
 using CourtSpotter.Extensions;
+using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 
 var builder = WebApplication.CreateBuilder(args);
 

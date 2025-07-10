@@ -2,10 +2,10 @@
 using System.Net;
 using AngleSharp;
 using AngleSharp.Dom;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
-using PadelCourts.Core.Results;
-using PadelCourts.Infrastructure.BookingProviders.KlubyOrg;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Results;
+using CourtSpotter.Infrastructure.BookingProviders.KlubyOrg;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 public class KlubyOrgCourtBookingProvider : ICourtBookingProvider

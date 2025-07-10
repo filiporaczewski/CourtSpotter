@@ -1,4 +1,4 @@
-﻿namespace CourtSpotter.Utils;
+﻿namespace CourtSpotter.Core.Utils;
 
 public static class CollectionUtils
 {

@@ -1,9 +1,9 @@
 ﻿using System.Net;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Infrastructure.BookingProviders;
+using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
+using CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 using CourtSpotter.Resolvers;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Infrastructure.BookingProviders;
-using PadelCourts.Infrastructure.BookingProviders.Playtomic;
-using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
 
 namespace CourtSpotter.Extensions;
 

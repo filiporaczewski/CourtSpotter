@@ -1,8 +1,8 @@
-﻿using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
-using PadelCourts.Infrastructure.BookingProviders;
-using PadelCourts.Infrastructure.BookingProviders.Playtomic;
-using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
+﻿using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Infrastructure.BookingProviders;
+using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
+using CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 
 namespace CourtSpotter.Resolvers;
 

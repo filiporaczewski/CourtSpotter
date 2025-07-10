@@ -1,10 +1,10 @@
 using System.Net;
 using System.Text.Json;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Moq.Protected;
-using PadelCourts.Core.Models;
-using PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
 using Shouldly;
 
 namespace CourtSpotter.Infrastructure.Tests;

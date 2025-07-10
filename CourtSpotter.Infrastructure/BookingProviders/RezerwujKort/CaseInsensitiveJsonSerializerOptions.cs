@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
+namespace CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 
 public class CaseInsensitiveJsonSerializerOptions
 {

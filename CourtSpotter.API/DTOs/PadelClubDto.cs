@@ -1,6 +1,4 @@
-﻿using PadelCourts.Core.Models;
-
-namespace CourtSpotter.DTOs;
+﻿namespace CourtSpotter.DTOs;
 
 public class PadelClubDto
 {

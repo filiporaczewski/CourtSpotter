@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using AngleSharp;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
 
-namespace PadelCourts.Infrastructure.BookingProviders.Playtomic.Sync;
+namespace CourtSpotter.Infrastructure.BookingProviders.Playtomic.Sync;
 
 public class PlaytomicCourtsSyncManager : IPlaytomicCourtsSyncManager
 {

@@ -1,12 +1,12 @@
 ﻿using Azure.Monitor.OpenTelemetry.Exporter;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Infrastructure.BookingProviders.Playtomic.Sync;
+using CourtSpotter.Infrastructure.DataAccess;
 using Microsoft.Azure.Cosmos;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Infrastructure.BookingProviders.Playtomic.Sync;
-using PadelCourts.Infrastructure.DataAccess;
 
 namespace CourtSpotter.Extensions;
 

@@ -1,4 +1,4 @@
-﻿namespace PadelCourts.Core.Models;
+﻿namespace CourtSpotter.Core.Models;
 
 public enum ProviderType
 {

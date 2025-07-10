@@ -1,7 +1,7 @@
-﻿using PadelCourts.Core.Models;
-using PadelCourts.Core.Results;
+﻿using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Results;
 
-namespace PadelCourts.Core.Contracts;
+namespace CourtSpotter.Core.Contracts;
 
 public interface ICourtBookingProvider
 {

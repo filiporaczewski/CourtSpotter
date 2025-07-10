@@ -1,9 +1,9 @@
-﻿using Microsoft.Azure.Cosmos;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
-using CourtSpotter.Utils;
+﻿using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Utils;
+using Microsoft.Azure.Cosmos;
 
-namespace PadelCourts.Infrastructure.DataAccess;
+namespace CourtSpotter.Infrastructure.DataAccess;
 
 public class CourtAvailabilityRepository : ICourtAvailabilityRepository
 {

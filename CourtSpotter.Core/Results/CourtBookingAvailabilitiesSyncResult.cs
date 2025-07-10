@@ -1,6 +1,6 @@
-﻿using PadelCourts.Core.Models;
+﻿using CourtSpotter.Core.Models;
 
-namespace PadelCourts.Core.Results;
+namespace CourtSpotter.Core.Results;
 
 public class CourtBookingAvailabilitiesSyncResult
 {

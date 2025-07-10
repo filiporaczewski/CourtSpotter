@@ -1,13 +1,12 @@
 ﻿using System.Net;
 using System.Text.Json;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
-using PadelCourts.Infrastructure.BookingProviders;
-using PadelCourts.Infrastructure.BookingProviders.Playtomic;
 using Shouldly;
 
 namespace CourtSpotter.Infrastructure.Tests;

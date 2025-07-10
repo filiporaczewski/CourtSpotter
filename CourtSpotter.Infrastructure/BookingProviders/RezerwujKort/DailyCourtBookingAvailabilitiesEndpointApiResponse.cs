@@ -1,4 +1,4 @@
-﻿namespace PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
+﻿namespace CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 
 public class DailyCourtBookingAvailabilitiesEndpointApiResponse
 {

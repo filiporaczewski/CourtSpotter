@@ -1,12 +1,12 @@
 ﻿using System.Globalization;
 using System.Text.Json;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
-using PadelCourts.Core.Results;
 
-namespace PadelCourts.Infrastructure.BookingProviders.Playtomic;
+namespace CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 
 public class PlaytomicBookingProvider : ICourtBookingProvider
 {

@@ -1,7 +1,7 @@
-﻿using CourtSpotter.DTOs;
+﻿using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
 
 namespace CourtSpotter.Endpoints;
 

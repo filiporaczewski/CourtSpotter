@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PadelCourts.Core.Contracts;
+﻿using CourtSpotter.Core.Contracts;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CourtSpotter.Endpoints;
 

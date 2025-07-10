@@ -1,10 +1,10 @@
 ﻿using System.Globalization;
 using System.Text.Json;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
-using PadelCourts.Core.Results;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Results;
 
-namespace PadelCourts.Infrastructure.BookingProviders.RezerwujKort;
+namespace CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 
 public class RezerwujKortBookingProvider : ICourtBookingProvider
 {

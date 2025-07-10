@@ -1,4 +1,4 @@
-﻿namespace PadelCourts.Infrastructure.BookingProviders.KlubyOrg;
+﻿namespace CourtSpotter.Infrastructure.BookingProviders.KlubyOrg;
 
 public class GridColumnState
 {

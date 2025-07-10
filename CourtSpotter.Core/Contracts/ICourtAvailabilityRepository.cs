@@ -1,6 +1,6 @@
-﻿using PadelCourts.Core.Models;
+﻿using CourtSpotter.Core.Models;
 
-namespace PadelCourts.Core.Contracts;
+namespace CourtSpotter.Core.Contracts;
 
 public interface ICourtAvailabilityRepository
 {

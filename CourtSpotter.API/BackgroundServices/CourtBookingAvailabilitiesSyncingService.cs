@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
+using CourtSpotter.Core.Contracts;
+using CourtSpotter.Core.Models;
 using Microsoft.Extensions.Options;
-using PadelCourts.Core.Contracts;
-using PadelCourts.Core.Models;
 
 namespace CourtSpotter.BackgroundServices;
 

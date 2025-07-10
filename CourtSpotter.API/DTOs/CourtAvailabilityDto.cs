@@ -1,4 +1,4 @@
-﻿using PadelCourts.Core.Models;
+﻿using CourtSpotter.Core.Models;
 
 namespace CourtSpotter.DTOs;
 

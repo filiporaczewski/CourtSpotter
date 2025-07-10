@@ -1,4 +1,4 @@
-﻿namespace PadelCourts.Infrastructure.BookingProviders.Playtomic;
+﻿namespace CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 
 public class PlaytomicProviderOptions
 {

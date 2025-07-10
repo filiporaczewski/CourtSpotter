@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace PadelCourts.Infrastructure.BookingProviders;
+namespace CourtSpotter.Infrastructure.BookingProviders.Playtomic.Sync;
 
 public class PlaytomicCourtsJsonResponse
 {

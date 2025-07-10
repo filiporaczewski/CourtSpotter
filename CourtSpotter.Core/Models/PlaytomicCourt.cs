@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace PadelCourts.Core.Models;
+namespace CourtSpotter.Core.Models;
 
 public class PlaytomicCourt
 {
