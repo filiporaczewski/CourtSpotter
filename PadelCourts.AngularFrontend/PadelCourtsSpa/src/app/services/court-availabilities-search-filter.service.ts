@@ -78,15 +78,13 @@ export class CourtAvailabilitiesSearchFilterService {
       }
     }
 
-    if (queryParams['durations']) {
-      const durations = Array.isArray(queryParams['durations']) ? queryParams['durations'] : [queryParams['durations']];
+    const durations: string[] = queryParams['durations'] ? [].concat(queryParams['durations']) : [];
 
-      filters.duration = {
-        duration60: durations.includes('60'),
-        duration90: durations.includes('90'),
-        duration120: durations.includes('120')
-      };
-    }
+    filters.duration = {
+      duration60: durations.includes('60'),
+      duration90: durations.includes('90'),
+      duration120: durations.includes('120')
+    };
 
     return filters;
   }
