@@ -4,19 +4,19 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'PadelCourts.API/**'
-      - 'PadelCourts.Core/**'
-      - 'PadelCourts.Infrastructure/**'
-      - 'PadelCourts.Infrastructure.Tests/**'
+      - 'CourtSpotter.API/**'
+      - 'CourtSpotter.Core/**'
+      - 'CourtSpotter.Infrastructure/**'
+      - 'CourtSpotter.Infrastructure.Tests/**'
       - '*.sln'
       - '**/*.csproj'
   pull_request: 
     branches: [ main ]
     paths:
-      - 'PadelCourts.API/**'
-      - 'PadelCourts.Core/**'
-      - 'PadelCourts.Infrastructure/**'
-      - 'PadelCourts.Infrastructure.Tests/**'
+      - 'CourtSpotter.API/**'
+      - 'CourtSpotter.Core/**'
+      - 'CourtSpotter.Infrastructure/**'
+      - 'CourtSpotter.Infrastructure.Tests/**'
       - '*.sln'
       - '**/*.csproj'
 
@@ -33,12 +33,12 @@ jobs:
           dotnet-version: '8.0'
           
       - name: Restore dependencies
-        run: dotnet restore WebApplication1.sln
+        run: dotnet restore CourtSpotter.sln
 
       - name: Build solution
-        run: dotnet build WebApplication1.sln --no-restore --configuration Release
+        run: dotnet build CourtSpotter.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test WebApplication1.sln --no-build --configuration Release --verbosity normal
+        run: dotnet test CourtSpotter.sln --no-build --configuration Release --verbosity normal
 
   
