@@ -2,18 +2,23 @@ import {Component, inject, input, model} from '@angular/core';
 import {PadelClub} from '../../../models/padel-club';
 import {NgIcon, provideIcons} from '@ng-icons/core';
 import {heroInformationCircle} from '@ng-icons/heroicons/outline';
-import {PcOverlayDialogComponent} from '../../../shared/pc-overlay-dialog/pc-overlay-dialog.component';
+import {CsOverlayDialogComponent} from '../../../shared/components/cs-overlay-dialog/cs-overlay-dialog.component';
 import {ClubInfoComponent} from '../../club-info/club-info.component';
 import {AppStateService} from '../../../services/app-state.service';
 import {TranslocoPipe} from '@jsverse/transloco';
+import {AsyncState} from '../../../models/AsyncState';
+import {CsLoaderComponent} from '../../../shared/components/cs-loader/cs-loader.component';
+import {ErrorBoxComponent} from '../../../shared/components/error-box/error-box.component';
 
 @Component({
   selector: 'app-padel-club-filters',
   imports: [
     NgIcon,
-    PcOverlayDialogComponent,
+    CsOverlayDialogComponent,
     ClubInfoComponent,
-    TranslocoPipe
+    TranslocoPipe,
+    CsLoaderComponent,
+    ErrorBoxComponent
   ],
   providers: [provideIcons({ heroInformationCircle })],
   template: `
@@ -21,24 +26,34 @@ import {TranslocoPipe} from '@jsverse/transloco';
       <h4 class="text-center md:text-left font-mono text-lg text-gray-900 dark:text-white mb-3">
         {{ 'filters.clubs' | transloco }}
       </h4>
-      <div class="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-slate-800 max-w-96">
-        @for (padelClub of padelClubs(); track padelClub.id) {
-          <label class="flex items-center md:justify-normal justify-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer py-1">
-            <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="cursor-pointer w-3 h-3 md:w-4 md:h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
-            <span class="text-sm text-clip">{{padelClub.name}}</span>
-            <ng-icon (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" />
-          </label>
+      <div class="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-slate-800 max-w-96 min-w-30">
+        @if(padelClubsState().data ; as padelClubs) {
+          @for (padelClub of padelClubs; track padelClub.id) {
+            <label class="flex items-center md:justify-normal justify-center space-x-2 font-mono text-gray-900 dark:text-white cursor-pointer py-1">
+              <input type="checkbox" [checked]="isClubSelected(padelClub.id)" (change)="toggleClubSelection(padelClub.id, $event)" class="cursor-pointer w-3 h-3 md:w-4 md:h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+              <span class="text-sm text-clip">{{padelClub.name}}</span>
+              <ng-icon (click)="onClubInfoClicked(padelClub.name, $event)" name="heroInformationCircle" />
+            </label>
+          }
+        }
+
+        @if(padelClubsState().loading) {
+          <app-cs-loader [spinnerSize]="4" />
+        }
+
+        @if(padelClubsState().error) {
+          <app-error-box />
         }
       </div>
     </div>
-    <app-pc-overlay-dialog [(visible)]="clubInfoDialogVisible" [overlayWidth]="650">
+    <app-cs-overlay-dialog [(visible)]="clubInfoDialogVisible" [overlayWidth]="650">
       <app-club-info />
-    </app-pc-overlay-dialog>
+    </app-cs-overlay-dialog>
   `,
   styles: ``
 })
 export class PadelClubFiltersComponent {
-  padelClubs = input.required<PadelClub[]>();
+  padelClubsState = input.required<AsyncState<PadelClub[]>>();
   clubIds = model.required<Set<string>>();
   clubInfoDialogVisible = model<boolean>(false);
 

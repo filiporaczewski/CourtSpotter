@@ -1,6 +1,5 @@
 {
   "title": "Search available padel courts",
-  "subtitle": "For now only Warsaw is available. More locations coming soon...",
   "filters": {
     "title": "Filters",
     "city": "City",
@@ -23,5 +22,9 @@
     "copyright": "All rights reserved."
   },
   "court_type_indoor": "Indoor",
-  "court_type_outdoor": "Outdoor"
+  "court_type_outdoor": "Outdoor",
+  "errors": {
+    "generic_error_message": "Sorry, something went wrong.",
+    "try_again": "Please try again later."
+  }
 }

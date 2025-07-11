@@ -1,13 +1,13 @@
 import {Component, computed, input, Signal} from '@angular/core';
 import {CourtAvailabilityGridItem} from '../../models/CourtAvailabilityGridModels';
 import {CourtType} from '../../models/court-type';
-import {PcTagComponent} from '../../shared/pc-tag/pc-tag.component';
+import {CsTagComponent} from '../../shared/components/cs-tag/cs-tag.component';
 import {TranslocoPipe} from '@jsverse/transloco';
 
 @Component({
   selector: 'app-grid-court-availability',
   imports: [
-    PcTagComponent,
+    CsTagComponent,
     TranslocoPipe
   ],
   template: `
@@ -16,14 +16,14 @@ import {TranslocoPipe} from '@jsverse/transloco';
       <div class="py-1 flex items-center justify-center gap-1 mb-1 font-bold text-sm">
         <span class="px-0.5">
           @if(isIndoor()) {
-            <app-pc-tag [value]="'court_type_indoor' | transloco" backgroundColorClass="bg-gray-800 dark:bg-slate-950" textColorClass="text-white" />
+            <app-cs-tag [value]="'court_type_indoor' | transloco" backgroundColorClass="bg-gray-800 dark:bg-slate-950" textColorClass="text-white" />
           } @else {
-            <app-pc-tag [value]="'court_type_outdoor' | transloco" backgroundColorClass="bg-green-500 dark:bg-green-800" textColorClass="text-white" />
+            <app-cs-tag [value]="'court_type_outdoor' | transloco" backgroundColorClass="bg-green-500 dark:bg-green-800" textColorClass="text-white" />
           }
         </span>
 
         @for (durationConfig of durationConfigs(); track $index) {
-          <app-pc-tag [value]="durationConfig.text" [backgroundColorClass]="durationConfig.bgColorClass" [textColorClass]="durationConfig.textColorClass" paddingXClass="px-1.5" />
+          <app-cs-tag [value]="durationConfig.text" [backgroundColorClass]="durationConfig.bgColorClass" [textColorClass]="durationConfig.textColorClass" paddingXClass="px-1.5" />
         }
       </div>
       <div><a [href]="availability().bookingUrl" target="_blank" class="text-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-600 hover:underline transition-colors duration-200">{{ 'grid.book' | transloco }}</a></div>

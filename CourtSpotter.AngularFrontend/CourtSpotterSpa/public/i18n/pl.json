@@ -1,6 +1,5 @@
 {
   "title": "Wyszukaj dostępne korty do padla",
-  "subtitle": "Na ten moment dostępna tylko Warszawa. Więcej lokalizacji wkrótce...",
   "filters": {
     "title": "Filtry",
     "city": "Miasto",
@@ -23,5 +22,9 @@
     "copyright": "Wszelkie prawa zastrzeżone."
   },
   "court_type_indoor": "Wewnętrzny",
-  "court_type_outdoor": "Zewnętrzny"
+  "court_type_outdoor": "Zewnętrzny",
+  "errors": {
+    "generic_error_message": "Coś poszło nie tak.",
+    "try_again": "Spróbuj później."
+  }
 }

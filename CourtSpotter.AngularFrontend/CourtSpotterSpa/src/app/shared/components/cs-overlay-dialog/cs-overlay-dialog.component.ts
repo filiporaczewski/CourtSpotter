@@ -2,7 +2,7 @@ import {Component, computed, input, model} from '@angular/core';
 import {NgStyle} from '@angular/common';
 
 @Component({
-  selector: 'app-pc-overlay-dialog',
+  selector: 'app-cs-overlay-dialog',
   imports: [
     NgStyle
   ],
@@ -53,7 +53,7 @@ import {NgStyle} from '@angular/common';
   `
 
 })
-export class PcOverlayDialogComponent {
+export class CsOverlayDialogComponent {
   visible = model.required<boolean>();
   overlayWidth = input<number>();
 
