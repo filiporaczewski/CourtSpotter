@@ -21,13 +21,13 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>();
 }
 
-var frontendUrl = builder.Configuration["FrontendUrl"];
+var frontendUrls = builder.Configuration.GetSection("FrontendUrls").Get<string[]>() ?? [];
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularSpa", policy =>
     {
-        policy.WithOrigins(frontendUrl).AllowAnyHeader().AllowAnyMethod();
+        policy.WithOrigins(frontendUrls).AllowAnyHeader().AllowAnyMethod();
     });
 });
 
