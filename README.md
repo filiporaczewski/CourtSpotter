@@ -11,7 +11,7 @@ CourtSpotter is a comprehensive court booking availability aggregator that helps
 
 ## 🌐 Live Application
 
-Visit **[courtspotter.org](https://courtspotter.org)** to find your perfect court!
+Visit **[courtspotter.org](https://www.courtspotter.org)** to find your perfect court!
 
 ## 🚀 Key Features
 
