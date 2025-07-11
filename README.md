@@ -7,7 +7,7 @@
 
 ## What is CourtSpotter?
 
-CourtSpotter is a comprehensive padel court booking availability aggregator that helps you find available courts in one place.
+CourtSpotter is a comprehensive padel court booking availability aggregator that helps you find available courts in your location in one place.
 
 ## 🌐 Live Application
 
