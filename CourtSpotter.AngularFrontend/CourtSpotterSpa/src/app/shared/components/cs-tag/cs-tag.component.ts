@@ -1,7 +1,7 @@
 import {Component, Input} from '@angular/core';
 
 @Component({
-  selector: 'app-pc-tag',
+  selector: 'app-cs-tag',
   template: `
     <span class="inline-flex items-center rounded-sm py-1.5 text-xs font-medium" [class]="defaultClasses">
       {{ value }}
@@ -9,7 +9,7 @@ import {Component, Input} from '@angular/core';
   `,
   styles: ``
 })
-export class PcTagComponent {
+export class CsTagComponent {
   @Input() value: string = '';
   @Input() backgroundColorClass = '';
   @Input() textColorClass = '';

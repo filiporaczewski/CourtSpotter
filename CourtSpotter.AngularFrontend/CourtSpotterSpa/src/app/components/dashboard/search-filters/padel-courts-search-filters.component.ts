@@ -10,6 +10,7 @@ import { heroAdjustmentsHorizontal } from '@ng-icons/heroicons/outline';
 import {CourtTypeFilterComponent} from './court-type-filter.component';
 import {TranslocoPipe} from '@jsverse/transloco';
 import {CityFilterComponent} from './city-filter.component';
+import {AsyncState} from '../../../models/AsyncState';
 
 @Component({
   selector: 'app-padel-courts-search-filters',
@@ -38,7 +39,7 @@ import {CityFilterComponent} from './city-filter.component';
             <app-city-filter />
             <app-date-filter [maxDaysAhead]="maxDaysAhead()" [(selectedDate)]="filters().date" />
             <app-duration-filters [(durationFilter)]="filters().duration" />
-            <app-padel-club-filters [(clubIds)]="filters().clubIds" [padelClubs]="padelClubs()" />
+            <app-padel-club-filters [(clubIds)]="filters().clubIds" [padelClubsState]="padelClubsState()" />
             <app-court-type-filter [(courtType)]="filters().courtType" />
           </div>
           <div class="flex justify-center">
@@ -56,7 +57,7 @@ import {CityFilterComponent} from './city-filter.component';
 export class PadelCourtsSearchFiltersComponent {
   filters = model.required<CourtAvailabilitiesSearchFilters>();
   filtersApplied = output<CourtAvailabilitiesSearchFilters>();
-  padelClubs = input.required<PadelClub[]>();
+  padelClubsState = input.required<AsyncState<PadelClub[]>>();
   maxDaysAhead = input.required<number>();
 
   applyFilters = () => {
