@@ -39,9 +39,15 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
 
     private async Task PerformSyncCycleAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var availablePadelClubs = await GetAvailablePadelClubsAsync(stoppingToken, scope);
-        await SyncAvailableCourtsAsync(availablePadelClubs, scope, stoppingToken);
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var availablePadelClubs = await GetAvailablePadelClubsAsync(stoppingToken, scope);
+            await SyncAvailableCourtsAsync(availablePadelClubs, scope, stoppingToken);   
+        } catch (Exception e)
+        {
+            _logger.LogError(e, "Error while syncing court booking availabilities");
+        }
     }
 
     private static async Task<List<PadelClub>> GetAvailablePadelClubsAsync(CancellationToken stoppingToken, IServiceScope scope)

@@ -50,4 +50,9 @@ public class PlaytomicCourtsRepository : IPlaytomicCourtsRepository
     {
         await _container.CreateItemAsync(court, new PartitionKey(court.Name), cancellationToken: cancellationToken);;
     }
+    
+    public async Task AddPlaytomicCourts(IEnumerable<PlaytomicCourt> courts, CancellationToken cancellationToken = default)
+    {
+        await Task.WhenAll(courts.Select(court => AddPlaytomicCourt(court, cancellationToken)));
+    }
 }
