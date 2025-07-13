@@ -1,13 +1,16 @@
-﻿using CourtSpotter.Core.Contracts;
+﻿using System.Net;
+using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
 using CourtSpotter.Core.Utils;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 
 namespace CourtSpotter.Infrastructure.DataAccess;
 
 public class CourtAvailabilityRepository : ICourtAvailabilityRepository
 {
     private readonly Container _container;
+    private readonly ILogger<CourtAvailabilityRepository> _logger;
     
     public CourtAvailabilityRepository(CosmosClient cosmosClient)
     {
@@ -20,72 +23,69 @@ public class CourtAvailabilityRepository : ICourtAvailabilityRepository
         
         foreach (var batch in batches)
         {
-            await Task.WhenAll(batch.Select(availability => _container.UpsertItemAsync(availability, new PartitionKey(availability.Id), cancellationToken: cancellationToken)));
+            await Task.WhenAll(batch.Select(availability => _container.CreateItemAsync(availability, new PartitionKey(availability.Id), cancellationToken: cancellationToken)));
             await Task.Delay(500, cancellationToken);
+        }
+    }
+
+    private async Task SaveAvailabilityAsync(CourtAvailability availability, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _container.CreateItemAsync(availability, new PartitionKey(availability.Id), cancellationToken: cancellationToken);
+        }
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+        {
+            _logger.LogWarning("Availability item too large, skipping: {AvailabilityId}", availability.Id);
+        }
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            _logger.LogWarning("Rate limited during adding availability, retrying: {AvailabilityId}", availability.Id);
+            await Task.Delay(ex.RetryAfter ?? TimeSpan.FromSeconds(1), cancellationToken);
+            await SaveAvailabilityAsync(availability, cancellationToken);
+        }
+        catch (CosmosException ex)
+        {
+            _logger.LogError(ex, "Failed to add availability: {AvailabilityId}, Status: {StatusCode}", availability.Id, ex.StatusCode);
+            throw;
         }
     }
 
     public async Task<IEnumerable<CourtAvailability>> GetAvailabilitiesAsync(DateTime startDate, DateTime endDate, int[]? durationFilters = null, string[]? clubIds = null, CourtType? courtType = null, CancellationToken cancellationToken = default)
     {
-        var queryText = "SELECT * FROM c WHERE c.startTime >= @startDate AND c.endTime <= @endDate";
-        
-        var parameters = new Dictionary<string, object>
+        try
         {
-            ["@startDate"] = startDate,
-            ["@endDate"] = endDate
-        };
+            var queryText = GetCourtAvailabilitiesQueryTextBuilder.BuildQueryText(startDate, endDate, durationFilters, clubIds, courtType, out var parameters);
+            var query = new QueryDefinition(queryText);
 
-        if (durationFilters != null && durationFilters.Length > 0)
-        {
-            var durationTimeSpans = durationFilters.Select(minutes => 
-                TimeSpan.FromMinutes(minutes).ToString(@"hh\:mm\:ss")).ToArray();
+            query = parameters.Aggregate(query, (current, param) => current.WithParameter(param.Key, param.Value));
 
-            var durationConditions = new List<string>();
-            for (int i = 0; i < durationTimeSpans.Length; i++)
+            var results = new List<CourtAvailability>();
+            using var iterator = _container.GetItemQueryIterator<CourtAvailability>(query);
+
+            while (iterator.HasMoreResults)
             {
-                var paramName = $"@duration{i}";
-                durationConditions.Add($"c.duration = {paramName}");
-                parameters[paramName] = durationTimeSpans[i];
+                var response = await iterator.ReadNextAsync(cancellationToken);
+                results.AddRange(response);
             }
-            
-            queryText += $" AND ({string.Join(" OR ", durationConditions)})";
-        }
-
-        if (clubIds != null && clubIds.Length > 0)
-        {
-            var clubIdsConditions = new List<string>();
-            for (int i = 0; i < clubIds.Length; i++)
-            {
-                var paramName = $"@clubId{i}";
-                clubIdsConditions.Add($"c.clubId = {paramName}");
-                parameters[paramName] = clubIds[i];
-            }
-            
-            queryText += $" AND ({string.Join(" OR ", clubIdsConditions)})";       
-        }
-
-        if (courtType != null)
-        {
-            queryText += $" AND c.type = {(int)courtType}";
-            parameters.Add("@courtType", courtType);
-        }
         
-        var query = new QueryDefinition(queryText);
-        foreach (var param in parameters)
-        {
-            query = query.WithParameter(param.Key, param.Value);
+            return results;
         }
-        
-        var results = new List<CourtAvailability>();
-        using var iterator = _container.GetItemQueryIterator<CourtAvailability>(query);
-
-        while (iterator.HasMoreResults)
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.BadRequest)
         {
-            var response = await iterator.ReadNextAsync(cancellationToken);
-            results.AddRange(response);
+            _logger.LogError(ex, "Invalid query parameters for GetAvailabilities");
+            throw new ArgumentException("Invalid query parameters", ex);
         }
-        
-        return results;
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            _logger.LogWarning("Rate limited during query");
+            throw;
+        }
+        catch (CosmosException ex)
+        {
+            _logger.LogError(ex, "Failed to query availabilities, Status: {StatusCode}", ex.StatusCode);
+            throw;
+        }
     }
 
     public async Task DeleteAvailabilitiesAsync(IEnumerable<CourtAvailability> availabilities, CancellationToken cancellationToken = default)
@@ -106,9 +106,20 @@ public class CourtAvailabilityRepository : ICourtAvailabilityRepository
         {
             await _container.DeleteItemAsync<CourtAvailability>(availability.Id, new PartitionKey(availability.Id), cancellationToken: cancellationToken);            
         } 
-        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
         {
-            // Item already deleted, continue
+            _logger.LogDebug("Availability already deleted: {AvailabilityId}", availability.Id);
+        }
+        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            _logger.LogWarning("Rate limited during delete: {AvailabilityId}", availability.Id);
+            await Task.Delay(ex.RetryAfter ?? TimeSpan.FromSeconds(1), cancellationToken);
+            await DeleteAvailabilityAsync(availability, cancellationToken);
+        }
+        catch (CosmosException ex)
+        {
+            _logger.LogError(ex, "Failed to delete availability: {AvailabilityId}, Status: {StatusCode}", availability.Id, ex.StatusCode);
+            throw;
         }
     }
 }

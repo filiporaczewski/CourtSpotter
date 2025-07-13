@@ -1,7 +1,11 @@
+using CourtSpotter.AspNetCore.ExceptionHandlers;
 using CourtSpotter.BackgroundServices;
 using CourtSpotter.Endpoints;
+using CourtSpotter.Endpoints.CourtAvailabilities;
+using CourtSpotter.Endpoints.PadelClubs;
 using CourtSpotter.Extensions;
 using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,10 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddInfrastructure(builder.Configuration, builder.Logging, builder.Environment);
 builder.Services.AddBookingProviders(builder.Configuration);
 builder.Services.AddHostedService<CourtBookingAvailabilitiesSyncingService>();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 if (builder.Environment.IsDevelopment())
 {
