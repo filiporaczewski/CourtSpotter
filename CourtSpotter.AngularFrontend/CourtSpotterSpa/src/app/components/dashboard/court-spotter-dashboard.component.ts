@@ -37,13 +37,12 @@ import {ErrorBoxComponent} from '../../shared/components/error-box/error-box.com
   template: `
       <section class="mb-16">
         <section class="flex flex-col items-center justify-center">
-          <div class="flex flex-col items-center mt-8 md:mb-2 md:flex-row gap-3">
-            <h2
-              class="text-center font-mono text-xl md:text-4xl px-4 font-bold text-gray-900 dark:text-white mb-1 md:mb-0">{{ 'title' | transloco }}</h2>
+          <div class="flex flex-col items-center mt-7 md:mt-14 mb-3 md:mb-6 md:flex-row gap-3">
+            <h2 class="text-center font-mono text-3xl md:text-5xl px-4 font-bold text-gray-900 dark:text-white mb-1 md:mb-0">{{ 'title' | transloco }}</h2>
           </div>
           @if (filters$ | async; as filters) {
             @if (padelClubsState$ | async; as padelClubsState) {
-              <app-padel-courts-search-filters [maxDaysAhead]="14" [filters]="filters" [padelClubsState]="padelClubsState" (filtersApplied)="applyFilters($event)"/>
+              <app-padel-courts-search-filters class="w-full" [maxDaysAhead]="14" [filters]="filters" [padelClubsState]="padelClubsState" (filtersApplied)="applyFilters($event)"/>
             }
         }
         </section>
@@ -63,8 +62,8 @@ import {ErrorBoxComponent} from '../../shared/components/error-box/error-box.com
               <h3 class="text-center font-bold font-mono px-8 p-30 text-l md:text-2xl text-gray-900 dark:text-white">{{ 'grid.no_results' | transloco }}</h3>
             } @else {
               <h3 class="text-center font-bold font-mono px-8 mb-6 text-xl md:text-2xl text-gray-900 dark:text-white">{{ 'grid.title' | transloco: {date: date | translocoDate} }}</h3>
-              <div
-                class="w-fit max-w-[95%] lg:max-w-[90%] xl:max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">
+              <div class="w-full mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">
+<!--              <div class="w-fit max-w-[95%] lg:max-w-[90%] xl:max-w-[70%] mx-auto overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-[800px] overflow-y-auto">-->
                 <div class="flex min-w-max">
                   @for (item of data.items; track $index) {
                     @if (item.gridClubs.length !== 0) {

@@ -11,11 +11,11 @@ import {HeaderComponent} from './components/header/header.component';
   imports: [RouterOutlet, FooterComponent, AsyncPipe, HeaderComponent],
   template: `
     @if(themeClass$ | async ; as themeClass) {
-      <div [class]="themeClass">
-        <div class="min-h-screen bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-300">
-          <app-header />
-          <router-outlet />
-          <app-footer />
+      <div [class]="themeClass" class="w-full flex justify-center bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-300 font-mono">
+        <div class="min-h-screen w-[90%] md:w-[60%] flex flex-col">
+          <app-header class="w-full" />
+          <router-outlet class="w-full" />
+          <app-footer class="w-full" />
         </div>
       </div>
     }

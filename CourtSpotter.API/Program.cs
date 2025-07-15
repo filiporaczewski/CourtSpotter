@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using CourtSpotter.AspNetCore.ExceptionHandlers;
 using CourtSpotter.BackgroundServices;
 using CourtSpotter.Endpoints;
@@ -6,8 +7,18 @@ using CourtSpotter.Endpoints.PadelClubs;
 using CourtSpotter.Extensions;
 using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy("CreatePadelClubs", policy => policy.RequireClaim("scp","padelclubs.create"));
+});
 
 builder.Services.Configure<CourtBookingAvailabilitiesSyncOptions>(builder.Configuration.GetSection("CourtBookingAvailabilitiesSync"));
 builder.Services.Configure<PlaytomicProviderOptions>(builder.Configuration.GetSection("PlaytomicProviderOptions"));
@@ -41,6 +52,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -54,6 +68,6 @@ app.UseCors("AllowAngularSpa");
 
 app.MapCourtAvailabilitiesEndpoints();
 app.MapPadelClubsEndpoints();
-app.MapPlaytomicCourtsEndpoint();
+// app.MapPlaytomicCourtsEndpoint();
 
 app.Run();

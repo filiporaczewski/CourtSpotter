@@ -26,5 +26,50 @@
   "errors": {
     "generic_error_message": "Sorry, something went wrong.",
     "try_again": "Please try again later."
+  },
+  "logout": "Log out",
+  "admin_panel": {
+    "title": "Admin panel",
+    "nav": {
+      "clubs": "Clubs"
+    },
+    "clubs": {
+      "title": "Clubs",
+      "table_headers": {
+        "name": "Name",
+        "club_id": "Club id",
+        "provider": "Provider",
+        "pages_count": "Page count (klubyorg)",
+        "actions": "Actions"
+      },
+      "form": {
+        "labels": {
+          "club_name": "Club name",
+          "club_id": "Club id",
+          "provider": "Provider",
+          "pages_count": "Pages count (klubyorg)"
+        },
+        "placeholders": {
+          "club_name": "Enter club name",
+          "club_id": "Enter club ID",
+          "provider": "Select provider",
+          "pages_count": "Enter pages count (klubyorg)"
+        },
+        "buttons": {
+          "add": "Add new",
+          "edit": "Edit"
+        }
+      },
+      "add_new_page_title": "Add new club"
+    },
+    "actions": {
+      "add": "Add new",
+      "edit": "Edit",
+      "delete": "Delete",
+      "sync_courts": "Sync courts"
+    },
+    "validation_errors": {
+      "club_name_required": "Club name is required"
+    }
   }
 }

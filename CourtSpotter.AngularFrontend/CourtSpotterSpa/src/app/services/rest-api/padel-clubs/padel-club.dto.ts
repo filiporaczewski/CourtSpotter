@@ -1,4 +1,6 @@
 export interface PadelClubDto {
   clubId: string,
-  name: string
+  name: string,
+  provider: string,
+  pagesCount?: number
 }

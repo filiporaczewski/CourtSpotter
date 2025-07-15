@@ -14,9 +14,15 @@ import {PadelCourtAvailabilityDto} from './rest-api/court-availabilities/padel-c
 export class CourtAvailabilityDataTransformationService {
   transformToGridData = (apiResponse: GetCourtAvailabilitiesResponse): CourtAvailabilityGridData => {
     const currentDate = new Date();
-    const filteredAvailabilities = apiResponse.courtAvailabilities.filter(availability =>
-      this.parseAsUTC(availability.dateTime) >= currentDate
-    );
+
+    const filteredAvailabilities = apiResponse.courtAvailabilities.filter(availability => {
+      const availabilityDate = new Date(availability.dateTime);
+      return availabilityDate >= currentDate;
+    })
+
+    // const filteredAvailabilities = apiResponse.courtAvailabilities.filter(availability =>
+    //   this.parseAsUTC(availability.dateTime) >= currentDate
+    // );
 
 
     const mergedAvailabilities = this.mergeAvailabilitiesByCourtAndTime(filteredAvailabilities);
@@ -63,7 +69,7 @@ export class CourtAvailabilityDataTransformationService {
         acc[key] = {
           courtName: dto.courtName,
           clubName: dto.clubName,
-          startTime: this.parseAsUTC(dto.dateTime),
+          startTime: new Date(dto.dateTime),
           bookingUrl: dto.bookingUrl,
           provider: dto.provider,
           durationsInMinutes: [],
@@ -104,22 +110,22 @@ export class CourtAvailabilityDataTransformationService {
     }));
   }
 
-  private parseAsUTC = (dateTimeString: string): Date => {
-    const date = new Date(dateTimeString);
-
-    if (dateTimeString.includes('+') || dateTimeString.includes('Z')) {
-      const utcYear = date.getUTCFullYear();
-      const utcMonth = date.getUTCMonth();
-      const utcDate = date.getUTCDate();
-      const utcHours = date.getUTCHours();
-      const utcMinutes = date.getUTCMinutes();
-      const utcSeconds = date.getUTCSeconds();
-
-      return new Date(utcYear, utcMonth, utcDate, utcHours, utcMinutes, utcSeconds);
-    }
-
-    return date;
-  }
+  // private parseAsUTC = (dateTimeString: string): Date => {
+  //   const date = new Date(dateTimeString);
+  //
+  //   if (dateTimeString.includes('+') || dateTimeString.includes('Z')) {
+  //     const utcYear = date.getUTCFullYear();
+  //     const utcMonth = date.getUTCMonth();
+  //     const utcDate = date.getUTCDate();
+  //     const utcHours = date.getUTCHours();
+  //     const utcMinutes = date.getUTCMinutes();
+  //     const utcSeconds = date.getUTCSeconds();
+  //
+  //     return new Date(utcYear, utcMonth, utcDate, utcHours, utcMinutes, utcSeconds);
+  //   }
+  //
+  //   return date;
+  // }
 
 
   private extractClubName = (clubName: string) => clubName || 'Unknown club'

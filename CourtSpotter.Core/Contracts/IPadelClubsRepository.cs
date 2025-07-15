@@ -8,5 +8,5 @@ public interface IPadelClubsRepository
 
     Task<PadelClub?> GetByName(string name, CancellationToken cancellationToken = default);
 
-    Task AddPadelClub(string name, ProviderType provider, CancellationToken cancellationToken = default);
+    Task AddPadelClub(PadelClub newClub, ProviderType provider, CancellationToken cancellationToken = default);
 }

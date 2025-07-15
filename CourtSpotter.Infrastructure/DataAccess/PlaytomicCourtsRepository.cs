@@ -1,6 +1,7 @@
 ﻿using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
 
 namespace CourtSpotter.Infrastructure.DataAccess;
 
@@ -8,9 +9,10 @@ public class PlaytomicCourtsRepository : IPlaytomicCourtsRepository
 {
     private readonly Container _container;
 
-    public PlaytomicCourtsRepository(CosmosClient cosmosClient)
+    public PlaytomicCourtsRepository(CosmosClient cosmosClient, IConfiguration configuration)
     {
-        _container = cosmosClient.GetContainer("PadelAvailabilitiesDb", "PlaytomicCourtsV2");
+        var containerId = configuration.GetValue<string>("CosmosDbContainers:PlaytomicCourts");
+        _container = cosmosClient.GetContainer(databaseId: "PadelAvailabilitiesDb", containerId);
     }
     
     public async Task<IEnumerable<PlaytomicCourt>> GetPlaytomicCourts(CancellationToken cancellationToken = default)

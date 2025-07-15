@@ -6,6 +6,7 @@ using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
 using CourtSpotter.Core.Results;
 using CourtSpotter.Infrastructure.BookingProviders.KlubyOrg;
+using Microsoft.Extensions.Configuration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
@@ -15,23 +16,27 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
     private readonly string _klubyOrgLogin;
     private readonly string _klubyOrgPassword;
     private readonly CookieContainer _cookieContainer;
+    private readonly TimeProvider _timeProvider;
     private const int MinSlotsForOneHour = 2;
     private const int MinSlotsForOneAndHalfHours = 3;
     private const int MinSlotsForTwoHours = 4;
+    private readonly TimeZoneInfo _localTimeZone;
 
-    public KlubyOrgCourtBookingProvider(IHttpClientFactory httpClientFactory, CookieContainer cookieContainer, IConfiguration configuration)
+    public KlubyOrgCourtBookingProvider(IHttpClientFactory httpClientFactory, CookieContainer cookieContainer, IConfiguration configuration, TimeProvider timeProvider)
     {
         _authenticatedClient = httpClientFactory.CreateClient("KlubyOrgClient");
         _cookieContainer = cookieContainer;
         _klubyOrgLogin = configuration["KlubyOrg:Username"];
         _klubyOrgPassword = configuration["KlubyOrg:Password"];
+        _timeProvider = timeProvider;
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(configuration.GetValue<string>("KlubyOrg:LocalTimeZoneId"));
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         var allAvailabilities = new List<CourtAvailability>();
         var failedDailyResults = new List<FailedDailyCourtBookingAvailabilitiesSyncResult>();
-
+        
         try
         { 
             await EnsureAuthenticatedAsync(cancellationToken);   
@@ -300,7 +305,10 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
     private List<CourtAvailability> GenerateCourtAvailabilities(DateTime date, GridColumnState courtState, PadelClub padelClub, string courtScheduleUrl)
     {
         var courtAvailabilities = new List<CourtAvailability>();
-        var currentDate = DateTime.Now;
+        
+        // Convert current UTC time to local time zone for filtering past slots
+        var currentUtcTime = _timeProvider.GetUtcNow();
+        var currentLocalTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime.DateTime, _localTimeZone);
 
         if (courtState.StartTime is null)
         {
@@ -312,7 +320,7 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
 
         for (int currentSlotIndex = 0; currentSlotIndex < courtState.ConsecutiveAvailableRows; currentSlotIndex++)
         {
-            if (availabilityDate < currentDate)
+            if (availabilityDate < currentLocalTime)
             {
                 break;
             }
@@ -356,14 +364,17 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
 
     private CourtAvailability GenerateCourtAvailability(PadelClub padelClub, DateTime startDate, int durationInMinutes, string courtName, string bookingUrl)
     {
+        var utcStartTime = TimeZoneInfo.ConvertTimeToUtc(startDate, _localTimeZone);
+        var utcEndTime = utcStartTime.AddMinutes(durationInMinutes);
+        
         return new CourtAvailability
         {
             ClubId = padelClub.ClubId,
             CourtName = courtName,
             ClubName = padelClub.Name,
             Provider = ProviderType.KlubyOrg,
-            StartTime = startDate,
-            EndTime = startDate.AddMinutes(durationInMinutes),
+            StartTime = utcStartTime,
+            EndTime = utcEndTime,
             Type = IsIndoor(courtName) ? CourtType.Indoor : CourtType.Outdoor,
             BookingUrl = $"{_baseUrl}/{bookingUrl}",
             Currency = "PLN",
@@ -371,8 +382,7 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
             Id = Guid.NewGuid().ToString()
         };   
     }
-
-
+    
     private async Task LoginToKlubyOrgAsync(string username, string password, CancellationToken cancellationToken = default)
     {
         var loginParams = new KeyValuePair<string, string>[]
