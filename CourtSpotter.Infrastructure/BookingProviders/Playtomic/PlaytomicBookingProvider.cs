@@ -2,6 +2,7 @@
 using System.Text.Json;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Options;
 using CourtSpotter.Core.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -17,14 +18,14 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
     private readonly int _latestPossibleBookingHour;
     private readonly string _baseUrl;
 
-    public PlaytomicBookingProvider(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider, IOptions<PlaytomicProviderOptions> options)
+    public PlaytomicBookingProvider(IHttpClientFactory httpClientFactory, IServiceProvider serviceProvider, IOptions<PlaytomicProviderOptions> playtomicOptions, IOptions<CourtBookingAvailabilitiesSyncOptions> syncOptions)
     {
         _httpClient = httpClientFactory.CreateClient("PlaytomicClient");
         _serviceProvider = serviceProvider;
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.LocalTimeZoneId);
-        _earliestPossibleBookingHour = options.Value.EarliestBookingHour;
-        _latestPossibleBookingHour = options.Value.LatestBookingHour;
-        _baseUrl = options.Value.ApiBaseUrl;
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(playtomicOptions.Value.LocalTimeZoneId);
+        _earliestPossibleBookingHour = syncOptions.Value.EarliestBookingHour;
+        _latestPossibleBookingHour = syncOptions.Value.LatestBookingHour;
+        _baseUrl = playtomicOptions.Value.ApiBaseUrl;
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)

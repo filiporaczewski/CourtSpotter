@@ -8,7 +8,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-namespace CourtSpotter.Extensions;
+namespace CourtSpotter.Extensions.DI;
 
 public static class ServiceCollectionInfrastructureExtensions
 {

@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using CourtSpotter.AspNetCore.ExceptionHandlers;
 using CourtSpotter.BackgroundServices;
-using CourtSpotter.Endpoints;
+using CourtSpotter.BackgroundServices.CourtBookingAvailabilitiesSync;
+using CourtSpotter.Core.Options;
 using CourtSpotter.Endpoints.CourtAvailabilities;
 using CourtSpotter.Endpoints.PadelClubs;
 using CourtSpotter.Extensions;
+using CourtSpotter.Extensions.DI;
 using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -68,6 +70,5 @@ app.UseCors("AllowAngularSpa");
 
 app.MapCourtAvailabilitiesEndpoints();
 app.MapPadelClubsEndpoints();
-// app.MapPlaytomicCourtsEndpoint();
 
 app.Run();

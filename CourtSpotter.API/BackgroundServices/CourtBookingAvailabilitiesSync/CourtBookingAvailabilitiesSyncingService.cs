@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Options;
 using Microsoft.Extensions.Options;
 
-namespace CourtSpotter.BackgroundServices;
+namespace CourtSpotter.BackgroundServices.CourtBookingAvailabilitiesSync;
 
 public class CourtBookingAvailabilitiesSyncingService : BackgroundService
 {
