@@ -3,6 +3,7 @@ using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
 using CourtSpotter.Core.Utils;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CourtSpotter.Infrastructure.DataAccess;
@@ -12,9 +13,11 @@ public class CourtAvailabilityRepository : ICourtAvailabilityRepository
     private readonly Container _container;
     private readonly ILogger<CourtAvailabilityRepository> _logger;
     
-    public CourtAvailabilityRepository(CosmosClient cosmosClient)
+    public CourtAvailabilityRepository(CosmosClient cosmosClient, IConfiguration configuration, ILogger<CourtAvailabilityRepository> logger)
     {
-        _container = cosmosClient.GetContainer("PadelAvailabilitiesDb", "CourtAvailabilities");
+        _logger = logger;
+        var containerId = configuration.GetValue<string>("CosmosDbContainers:CourtAvailabilities");
+        _container = cosmosClient.GetContainer(databaseId: "PadelAvailabilitiesDb", containerId);
     }
     
     public async Task SaveAvailabilitiesAsync(IEnumerable<CourtAvailability> availabilities, CancellationToken cancellationToken = default)

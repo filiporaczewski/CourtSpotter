@@ -26,16 +26,16 @@ import {AsyncState} from '../../../models/AsyncState';
   ],
   providers: [provideIcons({ heroAdjustmentsHorizontal })],
   template: `
-    <div class="px-4 md:px-8 pb-6">
-      <div class="py-6">
-        <div class="flex justify-center items-center mb-4">
+    <div class="pb-6 w-full">
+      <div class="py-6 flex flex-col justify-center items-center">
+        <div class="flex mb-6">
           <ng-icon name="heroAdjustmentsHorizontal" size="32px" color="#6a7282"></ng-icon>
-          <h3 class="font-mono text-xl font-semibold text-gray-900 dark:text-white px-1">
+          <h3 class="font-mono text-2xl font-bold text-gray-900 dark:text-white px-1">
             {{ 'filters.title' | transloco }}
           </h3>
         </div>
-        <div class="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-slate-900 p-4 md:p-6 rounded-lg w-fit">
-          <div class="flex flex-col md:flex-row md:gap-6">
+        <div class="border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-slate-900 p-4 md:p-6 rounded-lg w-full">
+          <div class="flex flex-col md:flex-row md:gap-8 md:justify-around md:items-center">
             <app-city-filter />
             <app-date-filter [maxDaysAhead]="maxDaysAhead()" [(selectedDate)]="filters().date" />
             <app-duration-filters [(durationFilter)]="filters().duration" />

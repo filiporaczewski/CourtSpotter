@@ -13,12 +13,14 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
     private const string BookableHourStatus = "OPEN";
     private const string BaseUrl = "https://www.rezerwujkort.pl";
     private readonly TimeProvider _timeProvider;
+    private readonly TimeZoneInfo _polishTimeZone;
     
     public RezerwujKortBookingProvider(IHttpClientFactory httpClientFactory, CaseInsensitiveJsonSerializerOptions caseInsensitiveJsonSerializerOptions, TimeProvider timeProvider)
     {
         _httpClient = httpClientFactory.CreateClient("RezerwujKortClient") ?? throw new InvalidOperationException("HttpClient 'RezerwujKortClient' is not configured");
         _serializerOptions = caseInsensitiveJsonSerializerOptions ?? throw new ArgumentNullException(nameof(caseInsensitiveJsonSerializerOptions));
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        _polishTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate,
@@ -98,10 +100,16 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                         continue;
                     }
 
-                    var bookingAvailabilityStartDateTime = date.Add(bookableHourTimeSpan);
-                    var currentDate = _timeProvider.GetLocalNow().DateTime;
+                    // Parse time as Polish local time, then convert to UTC for consistent storage
+                    var polishLocalDateTime = date.Add(bookableHourTimeSpan);
+                    var bookingAvailabilityStartDateTimeUtc = TimeZoneInfo.ConvertTimeToUtc(polishLocalDateTime, _polishTimeZone);
+                    
+                    // Convert current UTC time to Polish local time for filtering past slots
+                    var currentUtcTime = _timeProvider.GetUtcNow().DateTime;
+                    var currentPolishLocalTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime, _polishTimeZone);
 
-                    if (bookingAvailabilityStartDateTime < currentDate)
+                    // Filter past slots using local time comparison
+                    if (polishLocalDateTime < currentPolishLocalTime)
                     {
                         continue;
                     }
@@ -115,7 +123,8 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                             continue;
                         }
 
-                        var bookingAvailabilityEndDateTime = bookingAvailabilityStartDateTime.AddMinutes(availabilityDurationInMinutes);
+                        // Calculate end time in UTC
+                        var bookingAvailabilityEndDateTimeUtc = bookingAvailabilityStartDateTimeUtc.AddMinutes(availabilityDurationInMinutes);
 
                         availabilities.Add(new CourtAvailability
                         {
@@ -123,8 +132,8 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                             ClubId = padelClub.ClubId,
                             ClubName = padelClub.Name,
                             CourtName = court.CourtName,
-                            StartTime = bookingAvailabilityStartDateTime,
-                            EndTime = bookingAvailabilityEndDateTime,
+                            StartTime = bookingAvailabilityStartDateTimeUtc,
+                            EndTime = bookingAvailabilityEndDateTimeUtc,
                             Provider = ProviderType.RezerwujKort,
                             BookingUrl = $"{BaseUrl}/klub/{padelClub.Name}/rezerwacja_online?day={dateString}&court={court.CourtId}&hour={bookableHour.HourName}",
                             Type = IsOutdoor(court.CourtDescription) ? CourtType.Outdoor : CourtType.Indoor

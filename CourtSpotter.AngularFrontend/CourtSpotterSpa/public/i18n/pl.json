@@ -26,5 +26,50 @@
   "errors": {
     "generic_error_message": "Coś poszło nie tak.",
     "try_again": "Spróbuj później."
+  },
+  "logout": "Wyloguj",
+  "admin_panel": {
+    "title": "Panel administratora",
+    "nav": {
+      "clubs": "Kluby"
+    },
+    "clubs": {
+      "title": "Kluby",
+      "table_headers": {
+        "name": "Nazwa",
+        "club_id": "Id klubu",
+        "provider": "Provider",
+        "pages_count": "Ilość stron (klubyorg)",
+        "actions": "Akcje"
+      },
+      "form": {
+        "labels": {
+          "club_name": "Nazwa klubu",
+          "club_id": "Id klubu",
+          "provider": "Provider",
+          "pages_count": "Ilość stron (klubyorg)"
+        },
+        "placeholders": {
+          "club_name": "Wpisz nazwę klubu",
+          "club_id": "Wpisz id klubu",
+          "provider": "Wybierz providera",
+          "pages_count": "Wpisz ilość stron (klubyorg)"
+        },
+        "buttons": {
+          "add": "Dodaj",
+          "edit": "Edytuj"
+        }
+      },
+      "add_new_page_title": "Dodaj nowy klub"
+    },
+    "actions": {
+      "add": "Add new",
+      "edit": "Edit",
+      "delete": "Delete",
+      "sync_courts": "Sync courts"
+    },
+    "validation_errors": {
+      "club_name_required": "Nazwa klubu jest wymagana"
+    }
   }
 }

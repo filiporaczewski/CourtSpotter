@@ -1,6 +1,7 @@
 ﻿using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
 
 namespace CourtSpotter.Infrastructure.DataAccess;
 
@@ -8,9 +9,10 @@ public class PadelClubsRepository : IPadelClubsRepository
 {
     private readonly Container _container;
 
-    public PadelClubsRepository(CosmosClient cosmosClient)
+    public PadelClubsRepository(CosmosClient cosmosClient, IConfiguration configuration)
     {
-        _container = cosmosClient.GetContainer("PadelAvailabilitiesDb", "PadelClubs");
+        var containerId = configuration.GetValue<string>("CosmosDbContainers:PadelClubs");
+        _container = cosmosClient.GetContainer(databaseId: "PadelAvailabilitiesDb", containerId);
     }
     
     public async Task<IEnumerable<PadelClub>> GetPadelClubs(CancellationToken cancellationToken = default)
@@ -48,17 +50,8 @@ public class PadelClubsRepository : IPadelClubsRepository
         return null;
     }
 
-    public async Task AddPadelClub(string name, ProviderType provider, CancellationToken cancellationToken = default)
+    public async Task AddPadelClub(PadelClub newClub, ProviderType provider, CancellationToken cancellationToken = default)
     {
-        var id = Guid.NewGuid().ToString();
-        
-        var newClub = new PadelClub
-        {
-            Name = name,
-            Provider = provider,
-            ClubId = id
-        };
-        
-        await _container.CreateItemAsync(newClub, new PartitionKey(id), cancellationToken: cancellationToken);
+        await _container.CreateItemAsync(newClub, new PartitionKey(newClub.ClubId), cancellationToken: cancellationToken);
     }
 }

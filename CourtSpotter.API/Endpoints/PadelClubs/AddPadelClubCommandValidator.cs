@@ -7,6 +7,6 @@ public class AddPadelClubCommandValidator : AbstractValidator<AddPadelClubComman
     public AddPadelClubCommandValidator()
     {
         RuleFor(x => x.Name).NotEmpty().WithMessage("Name must not be empty");
-        RuleFor(x => x.Provider).NotEmpty().WithMessage("Provider must not be empty");
+        RuleFor(x => x.Provider).IsInEnum().WithMessage("Provider must not be empty");
     }
 }

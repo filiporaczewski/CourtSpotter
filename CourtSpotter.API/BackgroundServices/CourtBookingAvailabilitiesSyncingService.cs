@@ -12,18 +12,21 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
     private readonly ICourtBookingProviderResolver _courtBookingProviderResolver;
     private readonly CourtBookingAvailabilitiesSyncOptions _options;
     private readonly TimeSpan _courtAvailabilitiesUpdatePeriod;
+    private readonly TimeProvider _timeProvider;
 
     public CourtBookingAvailabilitiesSyncingService(
         ILogger<CourtBookingAvailabilitiesSyncingService> logger, 
         IServiceProvider serviceProvider, 
         ICourtBookingProviderResolver courtBookingProviderResolver,
-        IOptions<CourtBookingAvailabilitiesSyncOptions> options)
+        IOptions<CourtBookingAvailabilitiesSyncOptions> options,
+        TimeProvider timeProvider)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _courtBookingProviderResolver = courtBookingProviderResolver;
         _options = options.Value;
         _courtAvailabilitiesUpdatePeriod = TimeSpan.FromMinutes(_options.UpdatePeriod);
+        _timeProvider = timeProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,8 +69,9 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
 
         try
         {
-            var startDate = DateTime.Now.Date;
-            var endDate = DateTime.Now.Date.AddDays(_options.DaysToSyncCount);
+            var currentUtcTime = _timeProvider.GetUtcNow().DateTime;
+            var startDate = currentUtcTime.Date;
+            var endDate = currentUtcTime.Date.AddDays(_options.DaysToSyncCount);
 
             var syncTasks = availablePadelClubs.Select(async club =>
             {
@@ -110,7 +114,7 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
                 _logger.LogInformation("Sync completed in {elapsedMilliseconds} ms for {availableClubsCount} clubs", stopWatch.ElapsedMilliseconds, availablePadelClubs.Count);   
             } catch (Exception e)
             {
-                _logger.LogError(e, "Error while syncing court booking availabilities at {CurrentDate}", DateTime.Now);
+                _logger.LogError(e, "Error while syncing court booking availabilities at {CurrentDate}", currentUtcTime);
             }
         }
         finally

@@ -18,6 +18,8 @@
     "@angular/platform-browser": "^19.1.0",
     "@angular/platform-browser-dynamic": "^19.1.0",
     "@angular/router": "^19.1.0",
+    "@azure/msal-angular": "^4.0.15",
+    "@azure/msal-browser": "^4.15.0",
     "@jsverse/transloco": "^7.6.1",
     "@jsverse/transloco-locale": "^7.0.1",
     "@jsverse/transloco-persist-lang": "^7.0.2",

@@ -2,21 +2,24 @@
 using AngleSharp;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace CourtSpotter.Infrastructure.BookingProviders.Playtomic.Sync;
 
 public class PlaytomicCourtsSyncManager : IPlaytomicCourtsSyncManager
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<PlaytomicCourtsSyncManager> _logger;
 
-    public PlaytomicCourtsSyncManager(IHttpClientFactory httpClientFactory)
+    public PlaytomicCourtsSyncManager(IHttpClientFactory httpClientFactory, ILogger<PlaytomicCourtsSyncManager> logger)
     {
         _httpClient = httpClientFactory.CreateClient("PlaytomicClient");
+        _logger = logger;
     }
 
-    public async Task<IEnumerable<PlaytomicCourt>> RetrievePlaytomicCourts(PadelClub club, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<PlaytomicCourt>> RetrievePlaytomicCourts(string clubName, CancellationToken cancellationToken = default)
     {
-        var playtomicUrl = $"https://playtomic.com/clubs/{GetUrlSuffix(club.Name)}";
+        var playtomicUrl = $"https://playtomic.com/clubs/{GetUrlSuffix(clubName)}";
         var html = await _httpClient.GetStringAsync(playtomicUrl, cancellationToken);
         
         var config = Configuration.Default;
@@ -36,10 +39,12 @@ public class PlaytomicCourtsSyncManager : IPlaytomicCourtsSyncManager
 
             if (jsonData is null)
             {
-                return new List<PlaytomicCourt>();           
+                return new List<PlaytomicCourt>();
             }
-            
-            var filteredCourts = jsonData.Props.PageProps.Tenant.Resources
+
+            var tenant = jsonData.Props.PageProps.Tenant;
+
+            var filteredCourts = tenant.Resources
                 .Where(r => r.Properties.ResourceSize != "single")
                 .ToList();
 
@@ -48,12 +53,27 @@ public class PlaytomicCourtsSyncManager : IPlaytomicCourtsSyncManager
                 Name = item.Name,
                 Id = item.ResourceId,
                 Type = GetCourtType(item.Properties.ResourceType),
-                ClubId = club.ClubId
+                ClubId = tenant.TenantId
             });
+        }
+        catch (HttpRequestException e)
+        {
+            _logger.LogError(e, "Network error calling Playtomic API (Court sync)");
+            return new List<PlaytomicCourt>();
+        }
+        catch (TaskCanceledException e)
+        {
+            _logger.LogError(e, "Timeout when calling Playtomic API (Court sync)");
+            return new List<PlaytomicCourt>();
+        }
+        catch (JsonException e)
+        {
+            _logger.LogError(e, "Invalid JSON response from Playtomic API (Court sync)");
+            return new List<PlaytomicCourt>();
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error parsing Playtomic JSON: {e.Message}");
+            _logger.LogError(e, "Unexpected error when syncing playtomic courts for club {clubName}", clubName);
             return new List<PlaytomicCourt>();
         }
     }

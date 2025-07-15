@@ -13,7 +13,6 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
     private readonly HttpClient _httpClient;
     private readonly IServiceProvider _serviceProvider;
     private readonly TimeZoneInfo _localTimeZone;
-    private readonly TimeZoneInfo _apiTimeZone;
     private readonly int _earliestPossibleBookingHour;
     private readonly int _latestPossibleBookingHour;
     private readonly string _baseUrl;
@@ -23,7 +22,6 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
         _httpClient = httpClientFactory.CreateClient("PlaytomicClient");
         _serviceProvider = serviceProvider;
         _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.LocalTimeZoneId);
-        _apiTimeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.ApiTimeZoneId);
         _earliestPossibleBookingHour = options.Value.EarliestBookingHour;
         _latestPossibleBookingHour = options.Value.LatestBookingHour;
         _baseUrl = options.Value.ApiBaseUrl;
@@ -106,7 +104,7 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
 
                 foreach (var slot in filteredSlots)
                 {
-                    var (startDateTime, endDateTime) = ConvertSlotToLocalTime(slot, date);
+                    var (startDateTime, endDateTime) = ParseSlotTimes(slot, date);
                     var price = GetPriceAndCurrency(slot.Price);
 
                     if (!startDateTime.HasValue || !endDateTime.HasValue)
@@ -159,28 +157,30 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
     
     private bool IsValidTimeSlot(TimeSlot slot, DateTime date)
     {
-        var (startDateTime, _) = ConvertSlotToLocalTime(slot, date);
+        var (startDateTime, _) = ParseSlotTimes(slot, date);
     
         if (!startDateTime.HasValue)
         {
             return false;
         }
     
-        var hour = startDateTime.Value.Hour;
+        // Convert UTC time to local time zone for filtering based on local business hours
+        var localStartTime = TimeZoneInfo.ConvertTimeFromUtc(startDateTime.Value, _localTimeZone);
+        var hour = localStartTime.Hour;
         return hour >= _earliestPossibleBookingHour && hour <= _latestPossibleBookingHour;
     }
 
-    private (DateTime? startDateTime, DateTime? endDateTime) ConvertSlotToLocalTime(TimeSlot slot, DateTime date)
+    private (DateTime? startDateTime, DateTime? endDateTime) ParseSlotTimes(TimeSlot slot, DateTime date)
     {
         if (!TimeSpan.TryParse(slot.StartTime, out var startTimeSpan))
         {
             return (null, null);
         }
         
-        var apiStartDateTime = DateTime.SpecifyKind(date.Date.Add(startTimeSpan), DateTimeKind.Utc);
-        var localStartDateTime = TimeZoneInfo.ConvertTime(apiStartDateTime, _apiTimeZone, _localTimeZone);
-        var localEndDateTime = localStartDateTime.AddMinutes(slot.Duration);
-        return (localStartDateTime, localEndDateTime);
+        var utcStartDateTime = DateTime.SpecifyKind(date.Date.Add(startTimeSpan), DateTimeKind.Utc);
+        var utcEndDateTime = utcStartDateTime.AddMinutes(slot.Duration);
+        
+        return (utcStartDateTime, utcEndDateTime);
     }
 
     private static string BuildAvailabilityUrl(string baseUrl, string clubId, string date) => $"{baseUrl}/api/clubs/availability?tenant_id={clubId}&date={date}&sport_id=PADEL";
