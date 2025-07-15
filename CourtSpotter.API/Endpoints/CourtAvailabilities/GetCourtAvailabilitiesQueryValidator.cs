@@ -1,4 +1,6 @@
 ﻿using CourtSpotter.BackgroundServices;
+using CourtSpotter.BackgroundServices.CourtBookingAvailabilitiesSync;
+using CourtSpotter.Core.Options;
 using FluentValidation;
 using Microsoft.Extensions.Options;
 

@@ -5,7 +5,7 @@ using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 using CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 using CourtSpotter.Resolvers;
 
-namespace CourtSpotter.Extensions;
+namespace CourtSpotter.Extensions.DI;
 
 public static class ServiceCollectionBookingProvidersExtensions
 {

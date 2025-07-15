@@ -1,7 +1,9 @@
 using System.Net;
 using System.Text.Json;
 using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Options;
 using CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Moq;
 using Moq.Protected;
@@ -17,6 +19,7 @@ public class RezerwujKortBookingProviderTests
     private readonly CaseInsensitiveJsonSerializerOptions _serializerOptions;
     private readonly RezerwujKortBookingProvider _provider;
     private readonly FakeTimeProvider _fakeTimeProvider;
+    private readonly CourtBookingAvailabilitiesSyncOptions _syncOptions;
 
     private const string HttpClientName = "RezerwujKortClient";
     
@@ -28,7 +31,19 @@ public class RezerwujKortBookingProviderTests
         _httpClientFactoryMock.Setup(f => f.CreateClient(HttpClientName)).Returns(_httpClient);
         _serializerOptions = new CaseInsensitiveJsonSerializerOptions();
         _fakeTimeProvider = new FakeTimeProvider();
-        _provider = new RezerwujKortBookingProvider(_httpClientFactoryMock.Object, _serializerOptions, _fakeTimeProvider);
+        
+        _syncOptions = new CourtBookingAvailabilitiesSyncOptions
+        {
+            DaysToSyncCount = 2,
+            EarliestBookingHour = 6,
+            LatestBookingHour = 22,
+            UpdatePeriod = 10
+        };
+        
+        var courtBookingAvailabilitiesSyncOptionsMock = new Mock<IOptions<CourtBookingAvailabilitiesSyncOptions>>();
+        courtBookingAvailabilitiesSyncOptionsMock.Setup(o => o.Value).Returns(_syncOptions);
+        
+        _provider = new RezerwujKortBookingProvider(_httpClientFactoryMock.Object, _serializerOptions, _fakeTimeProvider, courtBookingAvailabilitiesSyncOptionsMock.Object);;
     }
     
     [Fact]

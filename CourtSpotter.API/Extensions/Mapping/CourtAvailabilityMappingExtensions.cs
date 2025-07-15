@@ -1,8 +1,7 @@
 ﻿using CourtSpotter.Core.Models;
 using CourtSpotter.DTOs;
-using CourtSpotter.Extensions;
 
-namespace CourtSpotter.MappingExtensions;
+namespace CourtSpotter.Extensions.Mapping;
 
 public static class CourtAvailabilityMappingExtensions
 {
@@ -17,7 +16,7 @@ public static class CourtAvailabilityMappingExtensions
             Currency: courtAvailability.Currency ?? "PLN",
             BookingUrl: courtAvailability.BookingUrl ?? string.Empty,
             Provider: courtAvailability.Provider.ToDisplayName(),
-            DurationInMinutes: courtAvailability.StartTime.CalculateDurationInMinutes(courtAvailability.EndTime),
+            DurationInMinutes: (int)courtAvailability.Duration.TotalMinutes,
             CourtType: courtAvailability.Type
         );
     }

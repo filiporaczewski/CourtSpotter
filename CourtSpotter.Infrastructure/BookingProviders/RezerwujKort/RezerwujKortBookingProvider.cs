@@ -2,7 +2,9 @@
 using System.Text.Json;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
+using CourtSpotter.Core.Options;
 using CourtSpotter.Core.Results;
+using Microsoft.Extensions.Options;
 
 namespace CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 
@@ -14,13 +16,17 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
     private const string BaseUrl = "https://www.rezerwujkort.pl";
     private readonly TimeProvider _timeProvider;
     private readonly TimeZoneInfo _polishTimeZone;
+    private readonly int _earliestPossibleBookingHour;
+    private readonly int _latestPossibleBookingHour;
     
-    public RezerwujKortBookingProvider(IHttpClientFactory httpClientFactory, CaseInsensitiveJsonSerializerOptions caseInsensitiveJsonSerializerOptions, TimeProvider timeProvider)
+    public RezerwujKortBookingProvider(IHttpClientFactory httpClientFactory, CaseInsensitiveJsonSerializerOptions caseInsensitiveJsonSerializerOptions, TimeProvider timeProvider, IOptions<CourtBookingAvailabilitiesSyncOptions> syncOptions)
     {
         _httpClient = httpClientFactory.CreateClient("RezerwujKortClient") ?? throw new InvalidOperationException("HttpClient 'RezerwujKortClient' is not configured");
         _serializerOptions = caseInsensitiveJsonSerializerOptions ?? throw new ArgumentNullException(nameof(caseInsensitiveJsonSerializerOptions));
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
         _polishTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        _earliestPossibleBookingHour = syncOptions.Value.EarliestBookingHour;
+        _latestPossibleBookingHour = syncOptions.Value.LatestBookingHour;
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate,
@@ -95,7 +101,7 @@ public class RezerwujKortBookingProvider : ICourtBookingProvider
                         continue;
                     }
 
-                    if (bookableHourTimeSpan.Hours is > 22 or < 6)
+                    if (bookableHourTimeSpan.Hours < _earliestPossibleBookingHour || bookableHourTimeSpan.Hours > _latestPossibleBookingHour)
                     {
                         continue;
                     }

@@ -1,6 +1,6 @@
 ﻿using CourtSpotter.Core.Models;
 
-namespace CourtSpotter.Extensions;
+namespace CourtSpotter.Extensions.Mapping;
 
 public static class ProviderTypeExtensions
 {

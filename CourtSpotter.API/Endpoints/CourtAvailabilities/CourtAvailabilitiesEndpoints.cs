@@ -1,6 +1,8 @@
 ﻿using CourtSpotter.Core.Contracts;
 using CourtSpotter.Extensions;
-using CourtSpotter.MappingExtensions;
+using CourtSpotter.Extensions.DI;
+using CourtSpotter.Extensions.Endpoints;
+using CourtSpotter.Extensions.Mapping;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourtSpotter.Endpoints.CourtAvailabilities;

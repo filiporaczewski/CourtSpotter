@@ -2,6 +2,9 @@
 using CourtSpotter.Core.Models;
 using CourtSpotter.DTOs;
 using CourtSpotter.Extensions;
+using CourtSpotter.Extensions.DI;
+using CourtSpotter.Extensions.Endpoints;
+using CourtSpotter.Extensions.Mapping;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourtSpotter.Endpoints.PadelClubs;
@@ -58,6 +61,7 @@ public static class PadelClubsEndpoints
         
         var newClub = PadelClub.Create(clubId, command.Name, command.Provider, command.PagesCount);;
         await padelClubsRepository.AddPadelClub(newClub, command.Provider, cancellationToken);
+        
         return Results.Ok(new
         {
             Id = newClub.ClubId,
