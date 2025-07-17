@@ -1,35 +1,19 @@
 ﻿using System.Globalization;
-using System.Net;
-using AngleSharp;
-using AngleSharp.Dom;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Models;
 using CourtSpotter.Core.Results;
-using CourtSpotter.Infrastructure.BookingProviders.KlubyOrg;
-using Microsoft.Extensions.Configuration;
-using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 
 public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
 {
-    private readonly HttpClient _authenticatedClient;
-    private readonly string _baseUrl = "https://kluby.org/";
-    private readonly string _klubyOrgLogin;
-    private readonly string _klubyOrgPassword;
-    private readonly CookieContainer _cookieContainer;
-    private readonly TimeProvider _timeProvider;
-    private const int MinSlotsForOneHour = 2;
-    private const int MinSlotsForOneAndHalfHours = 3;
-    private const int MinSlotsForTwoHours = 4;
-    private readonly TimeZoneInfo _localTimeZone;
+    private readonly HttpClient _httpClient;
+    private readonly IKlubyOrgAuthenticationService _authenticationService;
+    private readonly IKlubyOrgScheduleParser _scheduleParser;
 
-    public KlubyOrgCourtBookingProvider(IHttpClientFactory httpClientFactory, CookieContainer cookieContainer, IConfiguration configuration, TimeProvider timeProvider)
+    public KlubyOrgCourtBookingProvider(IHttpClientFactory httpClientFactory, IKlubyOrgAuthenticationService authenticationService, IKlubyOrgScheduleParser scheduleParser)
     {
-        _authenticatedClient = httpClientFactory.CreateClient("KlubyOrgClient");
-        _cookieContainer = cookieContainer;
-        _klubyOrgLogin = configuration["KlubyOrg:Username"];
-        _klubyOrgPassword = configuration["KlubyOrg:Password"];
-        _timeProvider = timeProvider;
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(configuration.GetValue<string>("KlubyOrg:LocalTimeZoneId"));
+        _httpClient = httpClientFactory.CreateClient("KlubyOrgClient");
+        _authenticationService = authenticationService;
+        _scheduleParser = scheduleParser;
     }
     
     public async Task<CourtBookingAvailabilitiesSyncResult> GetCourtBookingAvailabilitiesAsync(PadelClub padelClub, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
@@ -38,26 +22,17 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         var failedDailyResults = new List<FailedDailyCourtBookingAvailabilitiesSyncResult>();
         
         try
-        { 
-            await EnsureAuthenticatedAsync(cancellationToken);   
-        } 
-        catch (InvalidOperationException ex) when (ex.Message.Contains("authenticate"))
         {
-            for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
-            {
-                failedDailyResults.Add(new FailedDailyCourtBookingAvailabilitiesSyncResult
-                {
-                    Date = DateOnly.FromDateTime(date),
-                    Reason = "Failed to authenticate to KlubyOrg",
-                    Exception = ex
-                });
-            }
+            var isAuthenticated = await _authenticationService.EnsureAuthenticatedAsync(cancellationToken);
             
-            return new CourtBookingAvailabilitiesSyncResult
+            if (!isAuthenticated)
             {
-                CourtAvailabilities = allAvailabilities,
-                FailedDailyCourtBookingAvailabilitiesSyncResults = failedDailyResults
-            };
+                return CreateNonAuthenticatedSyncResult(startDate, endDate, "Failed to authenticate to kluby.org", null);
+            }
+        } 
+        catch (Exception ex)
+        {
+            return CreateNonAuthenticatedSyncResult(startDate, endDate, null, ex);
         }
         
         var dateTasks = new List<Task<DailyCourtBookingAvailabilitiesSyncResult>>();
@@ -103,19 +78,8 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         };
     }
 
-    private async Task EnsureAuthenticatedAsync(CancellationToken cancellationToken = default)
-    {
-        var cookies = _cookieContainer.GetCookies(new Uri(_baseUrl));
-        
-        if (cookies.Any() && cookies.All(c => c.Name != "kluby_org"))
-        {
-            await LoginToKlubyOrgAsync(_klubyOrgLogin, _klubyOrgPassword, cancellationToken);
-        }
-    }
-
     private async Task<DailyCourtBookingAvailabilitiesSyncResult> GetDailyAvailabilitiesAsync(PadelClub padelClub, DateTime date, int page, CancellationToken cancellationToken = default)
     {
-        var dailyAvailabilities = new List<CourtAvailability>();
         var dateBookingScheduleUrl = GetDateBookingScheduleUrl(date, padelClub.Name, page);
 
         try
@@ -127,118 +91,20 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
                 return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Empty response from KlubyOrg");
             }
             
-            var bookingScheduleDomDocument = await GetBookingScheduleHtmlDocumentAsync(bookingScheduleHtmlString, cancellationToken);
-
-            var bookingScheduleTableElement = bookingScheduleDomDocument.QuerySelector("#grafik");
+            var scheduleParseResult = await _scheduleParser.ParseScheduleAsync(
+                bookingScheduleHtmlString, 
+                date, 
+                padelClub, 
+                dateBookingScheduleUrl, 
+                cancellationToken);
             
-            if (bookingScheduleTableElement is null)
+            return new DailyCourtBookingAvailabilitiesSyncResult
             {
-                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), $"Failed to find booking schedule table");
-            }
-            
-            var availableCourtNames = bookingScheduleTableElement.QuerySelectorAll("thead tr th")
-                .Skip(1) 
-                .Select(th => ExtractCourtName(th.TextContent))
-                .ToList();
-            
-            var halfHourSlotRows = bookingScheduleTableElement.QuerySelectorAll("tbody tr, tr:not(thead tr)").ToList();
-            
-            if (!halfHourSlotRows.Any())
-            {
-                return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Failed to find any half hour slot rows");
-            }
-
-            var courtStates = new GridColumnState[availableCourtNames.Count];
-
-            for (int courtColIndex = 0; courtColIndex < availableCourtNames.Count; courtColIndex++)
-            {
-                courtStates[courtColIndex] = new GridColumnState
-                {
-                    CourtName = availableCourtNames[courtColIndex]
-                };
-            }
-
-            for (int rowIndex = 0; rowIndex < halfHourSlotRows.Count; rowIndex++)
-            {
-                var row = halfHourSlotRows[rowIndex];
-                var rowCells = row.QuerySelectorAll("td").ToList();
-                var timeText = rowCells[0].TextContent.Trim();
-                
-                if (!TimeSpan.TryParse(timeText, out var rowTime))
-                {
-                    continue;
-                }
-
-                var currentCellIndex = 1;
-                
-                for (int colIndex = 0; colIndex < courtStates.Length; colIndex++)
-                {
-                    var courtState = courtStates[colIndex];
-                    var isBookingBlockedForCurrentCourt = courtState.RemainingRowsBlocked > 0;
-                    
-                    if (isBookingBlockedForCurrentCourt)
-                    {
-                        courtState.RemainingRowsBlocked--;
-                    }
-                    else
-                    {
-                        if (currentCellIndex >= rowCells.Count)
-                        {
-                            break;
-                        }
-                        
-                        var cell = rowCells[currentCellIndex];
-                        var rowspan = int.TryParse(cell.GetAttribute("rowspan"), out var rs) ? rs : 1;
-                        currentCellIndex++;
-
-                        if (rowspan > 1)
-                        {
-                            var canCurrentStateBeBookedForAtLeastOneHour = courtState.ConsecutiveAvailableRows >= 2;
-                            
-                            if (canCurrentStateBeBookedForAtLeastOneHour)
-                            {
-                                dailyAvailabilities.AddRange(GenerateCourtAvailabilities(date, courtState, padelClub, dateBookingScheduleUrl));
-                            }
-                            
-                            courtState.StartTime = null;
-                            courtState.ConsecutiveAvailableRows = 0;
-                            courtState.RemainingRowsBlocked = rowspan - 1;
-                        }
-                        else
-                        {
-                            if (cell.QuerySelector("a[href*='rezerwuj']") != null)
-                            {
-                                if (courtState.ConsecutiveAvailableRows == 0)
-                                {
-                                    courtState.StartTime = rowTime;
-                                }
-                                
-                                courtState.ConsecutiveAvailableRows++;   
-                            }
-                            else
-                            {
-                                if (courtState.ConsecutiveAvailableRows >= MinSlotsForOneHour)
-                                {
-                                    dailyAvailabilities.AddRange(GenerateCourtAvailabilities(date, courtState, padelClub, dateBookingScheduleUrl));  
-                                }
-                                
-                                courtState.StartTime = null;
-                                courtState.ConsecutiveAvailableRows = 0;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            for (int colIndex = 0; colIndex < courtStates.Length; colIndex++)
-            {
-                var courtState = courtStates[colIndex];
-                
-                if (courtState.ConsecutiveAvailableRows >= MinSlotsForOneHour)
-                {
-                    dailyAvailabilities.AddRange(GenerateCourtAvailabilities(date, courtState, padelClub, dateBookingScheduleUrl)); 
-                }
-            }
+                CourtAvailabilities = scheduleParseResult.CourtAvailabilities,
+                Date = DateOnly.FromDateTime(date),
+                Success = scheduleParseResult.Success,
+                FailureReason = scheduleParseResult.ErrorMessage ?? null
+            };
         }
         catch (HttpRequestException ex)
         {
@@ -252,35 +118,9 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         {
             return DailyCourtBookingAvailabilitiesSyncResult.CreateFailedResult(DateOnly.FromDateTime(date), "Unexpected error processing KlubyOrg", ex);
         }
-
-
-        return new DailyCourtBookingAvailabilitiesSyncResult
-        {
-            CourtAvailabilities = dailyAvailabilities,
-            Date = DateOnly.FromDateTime(date),
-            Success = true
-        };
-    }
-
-    private async Task<IDocument> GetBookingScheduleHtmlDocumentAsync(string bookingScheduleHtmlString, CancellationToken cancellationToken = default)
-    {
-        var angleSharpConfig = Configuration.Default;
-        var browsingContext = BrowsingContext.New(angleSharpConfig);
-        return await browsingContext.OpenAsync(req => req.Content(bookingScheduleHtmlString), cancel: cancellationToken);
     }
     
-    private async Task<string> GetBookingScheduleHtmlStringAsync(string dateBookingScheduleUrl, CancellationToken cancellationToken = default)
-    {
-        var clientResponse = await _authenticatedClient.GetStringAsync(dateBookingScheduleUrl, cancellationToken);
-
-        if (clientResponse.Contains("Wyloguj"))
-        {
-            return clientResponse;
-        }
-        
-        await LoginToKlubyOrgAsync(_klubyOrgLogin, _klubyOrgPassword, cancellationToken);
-        return await _authenticatedClient.GetStringAsync(dateBookingScheduleUrl, cancellationToken);
-    }
+    private async Task<string> GetBookingScheduleHtmlStringAsync(string dateBookingScheduleUrl, CancellationToken cancellationToken = default) => await _httpClient.GetStringAsync(dateBookingScheduleUrl, cancellationToken);
 
     private string GetDateBookingScheduleUrl(DateTime date, string clubName, int page=0)
     {
@@ -289,116 +129,25 @@ public class KlubyOrgCourtBookingProvider : ICourtBookingProvider
         return $"{formattedClubName}/grafik?data_grafiku={dateString}&dyscyplina=4&strona={page}";
     }
 
-    private string ExtractCourtName(string headerText)
+    private CourtBookingAvailabilitiesSyncResult CreateNonAuthenticatedSyncResult(DateTime startDate, DateTime endDate, string? reason, Exception? exception)
     {
-        if (string.IsNullOrWhiteSpace(headerText))
+        var availabilities = new List<CourtAvailability>();
+        var failedDailyResults = new List<FailedDailyCourtBookingAvailabilitiesSyncResult>();
+        
+        for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
         {
-            return "Unknown Court";
+            failedDailyResults.Add(new FailedDailyCourtBookingAvailabilitiesSyncResult
+            {
+                Date = DateOnly.FromDateTime(date),
+                Reason = reason ?? "Error authenticating to kluby.org",
+                Exception = exception
+            });
         }
-        
-        var cleanedText = headerText.Replace("\t", "");
-        var lines = cleanedText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
-        return lines.FirstOrDefault()?.Trim() ?? "Unknown Court";
-    }
-
-    private List<CourtAvailability> GenerateCourtAvailabilities(DateTime date, GridColumnState courtState, PadelClub padelClub, string courtScheduleUrl)
-    {
-        var courtAvailabilities = new List<CourtAvailability>();
-        
-        // Convert current UTC time to local time zone for filtering past slots
-        var currentUtcTime = _timeProvider.GetUtcNow();
-        var currentLocalTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime.DateTime, _localTimeZone);
-
-        if (courtState.StartTime is null)
+            
+        return new CourtBookingAvailabilitiesSyncResult
         {
-            return courtAvailabilities;
-        }
-        
-        var availabilityDate = date.Add(courtState.StartTime.Value);
-        var availableHalfHourSlots = courtState.ConsecutiveAvailableRows;
-
-        for (int currentSlotIndex = 0; currentSlotIndex < courtState.ConsecutiveAvailableRows; currentSlotIndex++)
-        {
-            if (availabilityDate < currentLocalTime)
-            {
-                break;
-            }
-
-            if (availableHalfHourSlots >= MinSlotsForTwoHours)
-            {
-                courtAvailabilities.Add(GenerateCourtAvailabilityTwoHours(padelClub, availabilityDate, courtState.CourtName, courtScheduleUrl));
-            }
-
-            if (availableHalfHourSlots >= MinSlotsForOneAndHalfHours)
-            {
-                courtAvailabilities.Add(GenerateCourtAvailabilityOneAndHalfHours(padelClub, availabilityDate, courtState.CourtName, courtScheduleUrl));
-            }
-
-            if (availableHalfHourSlots >= MinSlotsForOneHour)
-            {
-                courtAvailabilities.Add(GenerateCourtAvailabilityOneHour(padelClub, availabilityDate, courtState.CourtName, courtScheduleUrl));
-            }
-
-            availableHalfHourSlots--;
-            availabilityDate = availabilityDate.AddMinutes(30);
-        }
-        
-        return courtAvailabilities;
-    }
-
-    private CourtAvailability GenerateCourtAvailabilityOneHour(PadelClub padelClub, DateTime startDate, string courtName, string bookingUrl)
-    {
-        return GenerateCourtAvailability(padelClub, startDate, 60, courtName, bookingUrl);
-    }
-    
-    private CourtAvailability GenerateCourtAvailabilityTwoHours(PadelClub padelClub, DateTime startDate, string courtName, string bookingUrl)
-    {
-        return GenerateCourtAvailability(padelClub, startDate, 120, courtName, bookingUrl);
-    }
-    
-    private CourtAvailability GenerateCourtAvailabilityOneAndHalfHours(PadelClub padelClub, DateTime startDate, string courtName, string bookingUrl)
-    {
-        return GenerateCourtAvailability(padelClub, startDate, 90, courtName, bookingUrl);
-    }
-
-    private CourtAvailability GenerateCourtAvailability(PadelClub padelClub, DateTime startDate, int durationInMinutes, string courtName, string bookingUrl)
-    {
-        var utcStartTime = TimeZoneInfo.ConvertTimeToUtc(startDate, _localTimeZone);
-        var utcEndTime = utcStartTime.AddMinutes(durationInMinutes);
-        
-        return new CourtAvailability
-        {
-            ClubId = padelClub.ClubId,
-            CourtName = courtName,
-            ClubName = padelClub.Name,
-            Provider = ProviderType.KlubyOrg,
-            StartTime = utcStartTime,
-            EndTime = utcEndTime,
-            Type = IsIndoor(courtName) ? CourtType.Indoor : CourtType.Outdoor,
-            BookingUrl = $"{_baseUrl}/{bookingUrl}",
-            Currency = "PLN",
-            Price = 0,
-            Id = Guid.NewGuid().ToString()
-        };   
-    }
-    
-    private async Task LoginToKlubyOrgAsync(string username, string password, CancellationToken cancellationToken = default)
-    {
-        var loginParams = new KeyValuePair<string, string>[]
-        {
-            new ("konto", username),
-            new ("haslo", password),
-            new ("logowanie", "1"),
-            new ("remember", "1"),
-            new ("page", "/")
+            CourtAvailabilities = availabilities,
+            FailedDailyCourtBookingAvailabilitiesSyncResults = failedDailyResults
         };
-        
-        await _authenticatedClient.PostAsync("logowanie", new FormUrlEncodedContent(loginParams), cancellationToken);
-    }
-
-    private bool IsIndoor(string courtName)
-    {
-        return courtName.ToLowerInvariant().Contains("hala");
     }
 }

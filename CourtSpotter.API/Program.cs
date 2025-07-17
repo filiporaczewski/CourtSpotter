@@ -23,7 +23,6 @@ builder.Services.AddAuthorization(opt =>
 });
 
 builder.Services.Configure<CourtBookingAvailabilitiesSyncOptions>(builder.Configuration.GetSection("CourtBookingAvailabilitiesSync"));
-builder.Services.Configure<PlaytomicProviderOptions>(builder.Configuration.GetSection("PlaytomicProviderOptions"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
