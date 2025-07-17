@@ -48,23 +48,23 @@ public static class ServiceCollectionInfrastructureExtensions
 
         var azureMonitorConnectionString = configuration["AzureMonitor:ConnectionString"];
         
-        logging.AddOpenTelemetry(b =>
-        {
-            b.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("api-padelcourtsearch"));
-
-            if (environment.IsDevelopment())
-            {
-                b.AddConsoleExporter();
-            } else if (environment.IsProduction() && !string.IsNullOrEmpty(azureMonitorConnectionString))
-            {
-                b.AddAzureMonitorLogExporter(options =>
-                {
-                    options.ConnectionString = azureMonitorConnectionString;
-                });
-            }
-        });
-        
         services.AddOpenTelemetry()
+            .WithLogging(b =>
+            {
+                b.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("api-padelcourtsearch"));
+        
+                if (environment.IsDevelopment())
+                {
+                    b.AddConsoleExporter();
+                } 
+                else if (environment.IsProduction() && !string.IsNullOrEmpty(azureMonitorConnectionString))
+                {
+                    b.AddAzureMonitorLogExporter(options =>
+                    {
+                        options.ConnectionString = azureMonitorConnectionString;
+                    });
+                }
+            })
             .WithTracing(b =>
             {
                 b.SetResourceBuilder(ResourceBuilder.CreateDefault()
@@ -90,10 +90,7 @@ public static class ServiceCollectionInfrastructureExtensions
                     })
                     .AddHttpClientInstrumentation();
 
-                if (environment.IsDevelopment())
-                {
-                    b.AddConsoleExporter();
-                } else if(environment.IsProduction() && !string.IsNullOrEmpty(azureMonitorConnectionString))
+                if(environment.IsProduction() && !string.IsNullOrEmpty(azureMonitorConnectionString))
                 {
                     b.AddAzureMonitorTraceExporter(options =>
                     {
@@ -104,7 +101,7 @@ public static class ServiceCollectionInfrastructureExtensions
             .WithMetrics(m =>
             {
                 m.SetResourceBuilder(ResourceBuilder.CreateDefault()
-                    .AddService("api-padelcourtsearch"))
+                        .AddService("api-padelcourtsearch"))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation();
 

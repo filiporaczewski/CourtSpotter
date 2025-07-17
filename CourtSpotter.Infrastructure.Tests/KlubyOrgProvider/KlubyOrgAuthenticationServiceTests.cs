@@ -5,7 +5,7 @@ using Moq;
 using Moq.Protected;
 using Shouldly;
 
-namespace CourtSpotter.Infrastructure.Tests;
+namespace CourtSpotter.Infrastructure.Tests.KlubyOrgProvider;
 
 public class KlubyOrgAuthenticationServiceTests
 {
@@ -17,16 +17,20 @@ public class KlubyOrgAuthenticationServiceTests
     private const string TestUsername = "test-user";
     private const string TestPassword = "test-password";
     private const string AuthCookieName = "kluby_autolog";
+    private const string HttpClientName = "KlubyOrgClient";
     
     public KlubyOrgAuthenticationServiceTests()
     {
         _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
         _cookieContainer = new CookieContainer();
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
         
         var httpClient = new HttpClient(_httpMessageHandlerMock.Object)
         {
             BaseAddress = new Uri(TestBaseUrl),
         };
+        
+        httpClientFactoryMock.Setup(f => f.CreateClient(HttpClientName)).Returns(httpClient);
 
         var options = new KlubyOrgProviderOptions
         {
@@ -37,7 +41,7 @@ public class KlubyOrgAuthenticationServiceTests
 
         var optionsMock = new Mock<IOptions<KlubyOrgProviderOptions>>();
         optionsMock.Setup(o => o.Value).Returns(options);
-        _authService = new KlubyOrgAuthenticationService(httpClient, _cookieContainer, optionsMock.Object);
+        _authService = new KlubyOrgAuthenticationService(httpClientFactoryMock.Object, _cookieContainer, optionsMock.Object);
     }
 
     [Fact]

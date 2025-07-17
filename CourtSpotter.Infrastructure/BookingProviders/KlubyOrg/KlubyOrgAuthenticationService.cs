@@ -19,10 +19,11 @@ public class KlubyOrgAuthenticationService : IKlubyOrgAuthenticationService
     private const string RedirectPageParamName = "page";
     private const string LoginEndpoint = "logowanie";
     private const string AuthCookieName = "kluby_autolog";
+    private const string HttpClientName = "KlubyOrgClient";
 
-    public KlubyOrgAuthenticationService(HttpClient httpClient, CookieContainer cookieContainer, IOptions<KlubyOrgProviderOptions> options)
+    public KlubyOrgAuthenticationService(IHttpClientFactory httpClientFactory, CookieContainer cookieContainer, IOptions<KlubyOrgProviderOptions> options)
     {
-        _httpClient = httpClient;
+        _httpClient = httpClientFactory.CreateClient(HttpClientName);
         _cookieContainer = cookieContainer;
         var optionsValue = options.Value; 
         _klubyOrgLogin = optionsValue.Username;
