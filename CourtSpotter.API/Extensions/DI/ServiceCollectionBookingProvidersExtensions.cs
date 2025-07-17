@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Infrastructure.BookingProviders;
+using CourtSpotter.Infrastructure.BookingProviders.KlubyOrg;
 using CourtSpotter.Infrastructure.BookingProviders.Playtomic;
 using CourtSpotter.Infrastructure.BookingProviders.RezerwujKort;
 using CourtSpotter.Resolvers;
@@ -17,6 +18,11 @@ public static class ServiceCollectionBookingProvidersExtensions
         services.AddSingleton<RezerwujKortBookingProvider>();
         services.AddSingleton<CaseInsensitiveJsonSerializerOptions>(_ => new CaseInsensitiveJsonSerializerOptions());
         services.AddSingleton<ICourtBookingProviderResolver, CourtBookingProviderResolver>();
+        services.AddSingleton<IKlubyOrgAuthenticationService, KlubyOrgAuthenticationService>();
+        services.AddSingleton<IKlubyOrgScheduleParser, KlubyOrgScheduleParser>();
+        
+        services.Configure<PlaytomicProviderOptions>(configuration.GetSection("PlaytomicProviderOptions"));
+        services.Configure<KlubyOrgProviderOptions>(configuration.GetSection("KlubyOrg"));
         
         services.AddHttpClient("PlaytomicClient", client =>
         {

@@ -9,7 +9,7 @@ using Moq;
 using Moq.Protected;
 using Shouldly;
 
-namespace CourtSpotter.Infrastructure.Tests;
+namespace CourtSpotter.Infrastructure.Tests.RezerwujKortProvider;
 
 public class RezerwujKortBookingProviderTests
 {

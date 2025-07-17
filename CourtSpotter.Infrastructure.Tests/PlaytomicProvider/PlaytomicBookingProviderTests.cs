@@ -10,7 +10,7 @@ using Moq;
 using Moq.Protected;
 using Shouldly;
 
-namespace CourtSpotter.Infrastructure.Tests;
+namespace CourtSpotter.Infrastructure.Tests.PlaytomicProvider;
 
 public class PlaytomicBookingProviderTests
 {
