@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using CourtSpotter.Core.Contracts;
-using CourtSpotter.Core.Models;
+﻿using CourtSpotter.Core.Contracts;
 using CourtSpotter.Core.Options;
 using Microsoft.Extensions.Options;
 
@@ -10,31 +8,23 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
 {
     private readonly ILogger<CourtBookingAvailabilitiesSyncingService> _logger;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ICourtBookingProviderResolver _courtBookingProviderResolver;
-    private readonly CourtBookingAvailabilitiesSyncOptions _options;
-    private readonly TimeSpan _courtAvailabilitiesUpdatePeriod;
-    private readonly TimeProvider _timeProvider;
+    private readonly TimeSpan _updatePeriod;
 
     public CourtBookingAvailabilitiesSyncingService(
-        ILogger<CourtBookingAvailabilitiesSyncingService> logger, 
-        IServiceProvider serviceProvider, 
-        ICourtBookingProviderResolver courtBookingProviderResolver,
-        IOptions<CourtBookingAvailabilitiesSyncOptions> options,
-        TimeProvider timeProvider)
+        ILogger<CourtBookingAvailabilitiesSyncingService> logger,
+        IServiceProvider serviceProvider,
+        IOptions<CourtBookingAvailabilitiesSyncOptions> options)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
-        _courtBookingProviderResolver = courtBookingProviderResolver;
-        _options = options.Value;
-        _courtAvailabilitiesUpdatePeriod = TimeSpan.FromMinutes(_options.UpdatePeriod);
-        _timeProvider = timeProvider;
+        _updatePeriod = TimeSpan.FromMinutes(options.Value.UpdatePeriod);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var periodicTimer = new PeriodicTimer(_courtAvailabilitiesUpdatePeriod);
+        using var periodicTimer = new PeriodicTimer(_updatePeriod);
         await PerformSyncCycleAsync(stoppingToken);
-        
+
         while (!stoppingToken.IsCancellationRequested && await periodicTimer.WaitForNextTickAsync(stoppingToken))
         {
             await PerformSyncCycleAsync(stoppingToken);
@@ -46,91 +36,12 @@ public class CourtBookingAvailabilitiesSyncingService : BackgroundService
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            var availablePadelClubs = await GetAvailablePadelClubsAsync(stoppingToken, scope);
-            await SyncAvailableCourtsAsync(availablePadelClubs, scope, stoppingToken);   
-        } catch (Exception e)
-        {
-            _logger.LogError(e, "Error while syncing court booking availabilities");
+            var courtBookingAvailabilitiesSyncOrchestrator = scope.ServiceProvider.GetRequiredService<ICourtAvailabilitiesSyncOrchestrator>();
+            await courtBookingAvailabilitiesSyncOrchestrator.OrchestrateSyncAsync(stoppingToken);
         }
-    }
-
-    private static async Task<List<PadelClub>> GetAvailablePadelClubsAsync(CancellationToken stoppingToken, IServiceScope scope)
-    {
-        var padelClubsRepository = scope.ServiceProvider.GetRequiredService<IPadelClubsRepository>();
-        var availableClubs = await padelClubsRepository.GetPadelClubs(stoppingToken);
-        var clubsList = availableClubs.ToList();
-        return clubsList;
-    }
-
-    private async Task SyncAvailableCourtsAsync(List<PadelClub> availablePadelClubs, IServiceScope scope,
-        CancellationToken cancellationToken = default)
-    {
-        var stopWatch = new Stopwatch();
-        stopWatch.Start();
-
-        try
+        catch (Exception ex)
         {
-            var currentUtcTime = _timeProvider.GetUtcNow().DateTime;
-            var startDate = currentUtcTime.Date;
-            var endDate = currentUtcTime.Date.AddDays(_options.DaysToSyncCount);
-
-            var syncTasks = availablePadelClubs.Select(async club =>
-            {
-                var courtBookingProvider = _courtBookingProviderResolver.GetProvider(club.Provider);
-                    
-                var clubCourtBookingAvailabilitiesSyncResult = await courtBookingProvider.GetCourtBookingAvailabilitiesAsync(club, startDate, endDate, cancellationToken);
-
-                if (clubCourtBookingAvailabilitiesSyncResult.FailedDailyCourtBookingAvailabilitiesSyncResults.Any())
-                {
-                    foreach (var failedDailyCourtBookingAvailabilitiesSyncResult in clubCourtBookingAvailabilitiesSyncResult.FailedDailyCourtBookingAvailabilitiesSyncResults)
-                    {
-                        _logger.LogError(failedDailyCourtBookingAvailabilitiesSyncResult.Exception, "{FailureReason} for {ClubName} at {Date}", failedDailyCourtBookingAvailabilitiesSyncResult.Reason, club.Name, failedDailyCourtBookingAvailabilitiesSyncResult.Date);
-                    }
-                }
-                    
-                var mostCurrentClubAvailabilities = clubCourtBookingAvailabilitiesSyncResult.CourtAvailabilities;
-
-                if (mostCurrentClubAvailabilities.Any())
-                {
-                    _logger.LogInformation("Successfully synced {count} availabilities for club: {clubName}", mostCurrentClubAvailabilities.Count, club.Name);   
-                }
-                    
-                return mostCurrentClubAvailabilities;
-            }).ToArray();
-            
-            var availabilitiesPerProvider = await Task.WhenAll(syncTasks);
-            var allProvidersCombinedAvailabilities = new List<CourtAvailability>();
-
-            foreach (var providerAvailabilities in availabilitiesPerProvider)
-            {
-                allProvidersCombinedAvailabilities.AddRange(providerAvailabilities);
-            }
-
-            try
-            {
-                var courtAvailabilityRepository = scope.ServiceProvider.GetRequiredService<ICourtAvailabilityRepository>();
-                var existingAvailabilities = await courtAvailabilityRepository.GetAvailabilitiesAsync(startDate.AddDays(-2), endDate.AddDays(2), cancellationToken: cancellationToken);
-                await SyncExistingAndMostCurrentAvailabilitiesAsync(allProvidersCombinedAvailabilities, existingAvailabilities, courtAvailabilityRepository, cancellationToken);
-                _logger.LogInformation("Finished syncing court booking availabilities from {startDate} to {endDate}", startDate, endDate);
-                _logger.LogInformation("Sync completed in {elapsedMilliseconds} ms for {availableClubsCount} clubs", stopWatch.ElapsedMilliseconds, availablePadelClubs.Count);   
-            } catch (Exception e)
-            {
-                _logger.LogError(e, "Error while syncing court booking availabilities at {CurrentDate}", currentUtcTime);
-            }
+            _logger.LogError(ex, "Error during sync cycle");
         }
-        finally
-        {
-            stopWatch.Stop();
-        }
-    }
-
-    private async Task SyncExistingAndMostCurrentAvailabilitiesAsync(IEnumerable<CourtAvailability> mostCurrentAvailabilities, IEnumerable<CourtAvailability> existingAvailabilities, ICourtAvailabilityRepository repository, CancellationToken cancellationToken)
-    {
-        var mostCurrentAvailabilitiesDictionary = mostCurrentAvailabilities.ToDictionary(c => $"{c.ClubId}_${c.StartTime:o}_${c.EndTime:o}_${c.CourtName}");
-        var existingAvailabilitiesDictionary = existingAvailabilities.ToDictionary(c => $"{c.ClubId}_${c.StartTime:o}_${c.EndTime:o}_${c.CourtName}");
-        var toAdd = mostCurrentAvailabilitiesDictionary.Keys.Except(existingAvailabilitiesDictionary.Keys).Select(k => mostCurrentAvailabilitiesDictionary[k]).ToList();
-        var toRemove = existingAvailabilitiesDictionary.Keys.Except(mostCurrentAvailabilitiesDictionary.Keys).Select(k => existingAvailabilitiesDictionary[k]).ToList();
-        await repository.SaveAvailabilitiesAsync(toAdd, cancellationToken);
-        await repository.DeleteAvailabilitiesAsync(toRemove, cancellationToken);
     }
 }

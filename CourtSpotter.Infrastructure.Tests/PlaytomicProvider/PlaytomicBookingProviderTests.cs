@@ -14,34 +14,26 @@ namespace CourtSpotter.Infrastructure.Tests.PlaytomicProvider;
 
 public class PlaytomicBookingProviderTests
 {
-    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock;
     private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
-    private readonly Mock<IServiceProvider> _serviceProviderMock;
-    private readonly Mock<IServiceScope> _serviceScopeMock;
-    private readonly Mock<IServiceProvider> _scopeServiceProviderMock;
-    private readonly Mock<IServiceScopeFactory> _serviceScopeFactoryMock;
     private readonly Mock<IPlaytomicCourtsRepository> _playtomicCourtsRepositoryMock;
-    private readonly HttpClient _httpClient;
-    private readonly PlaytomicProviderOptions _playtomicOptions;
     private readonly PlaytomicBookingProvider _provider;
-    private readonly CourtBookingAvailabilitiesSyncOptions _syncOptions;
 
     private const string HttpClientName = "PlaytomicClient";
 
     public PlaytomicBookingProviderTests()
     {
-        _httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+        var serviceProviderMock = new Mock<IServiceProvider>();
+        var serviceScopeMock = new Mock<IServiceScope>();
+        var scopeServiceProviderMock = new Mock<IServiceProvider>();
+        var serviceScopeFactoryMock = new Mock<IServiceScopeFactory>();
         _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
-        _serviceProviderMock = new Mock<IServiceProvider>();
-        _serviceScopeMock = new Mock<IServiceScope>();
-        _scopeServiceProviderMock = new Mock<IServiceProvider>();
-        _serviceScopeFactoryMock = new Mock<IServiceScopeFactory>();
         _playtomicCourtsRepositoryMock = new Mock<IPlaytomicCourtsRepository>();
+        var httpClient = new HttpClient(_httpMessageHandlerMock.Object);
         
-        _httpClient = new HttpClient(_httpMessageHandlerMock.Object);
-        _httpClientFactoryMock.Setup(f => f.CreateClient(HttpClientName)).Returns(_httpClient);
+        httpClientFactoryMock.Setup(f => f.CreateClient(HttpClientName)).Returns(httpClient);
         
-        _playtomicOptions = new PlaytomicProviderOptions
+        var playtomicOptions = new PlaytomicProviderOptions
         {
             ApiBaseUrl = "https://playtomic.com",
             LocalTimeZoneId = "UTC",
@@ -49,26 +41,25 @@ public class PlaytomicBookingProviderTests
         };
         
         var playtomicOptionsMock = new Mock<IOptions<PlaytomicProviderOptions>>();
-        playtomicOptionsMock.Setup(o => o.Value).Returns(_playtomicOptions);
-        
-        _syncOptions = new CourtBookingAvailabilitiesSyncOptions
+
+        var syncOptions = new CourtBookingAvailabilitiesSyncOptions
         {
             DaysToSyncCount = 2,
             EarliestBookingHour = 6,
             LatestBookingHour = 22,
             UpdatePeriod = 10
         };
-        
+
         var courtBookingAvailabilitiesSyncOptionsMock = new Mock<IOptions<CourtBookingAvailabilitiesSyncOptions>>();
-        courtBookingAvailabilitiesSyncOptionsMock.Setup(o => o.Value).Returns(_syncOptions);
         
-        _serviceScopeFactoryMock.Setup(f => f.CreateScope()).Returns(_serviceScopeMock.Object);
-        _serviceScopeMock.Setup(s => s.ServiceProvider).Returns(_scopeServiceProviderMock.Object);
-        _scopeServiceProviderMock.Setup(sp => sp.GetService(typeof(IPlaytomicCourtsRepository))).Returns(_playtomicCourtsRepositoryMock.Object);
+        playtomicOptionsMock.Setup(o => o.Value).Returns(playtomicOptions);
+        courtBookingAvailabilitiesSyncOptionsMock.Setup(o => o.Value).Returns(syncOptions);
+        serviceScopeFactoryMock.Setup(f => f.CreateScope()).Returns(serviceScopeMock.Object);
+        serviceScopeMock.Setup(s => s.ServiceProvider).Returns(scopeServiceProviderMock.Object);
+        scopeServiceProviderMock.Setup(sp => sp.GetService(typeof(IPlaytomicCourtsRepository))).Returns(_playtomicCourtsRepositoryMock.Object);
+        serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory))).Returns(serviceScopeFactoryMock.Object);
         
-        _serviceProviderMock.Setup(sp => sp.GetService(typeof(IServiceScopeFactory))).Returns(_serviceScopeFactoryMock.Object);
-        
-        _provider = new PlaytomicBookingProvider(_httpClientFactoryMock.Object, _serviceProviderMock.Object, playtomicOptionsMock.Object, courtBookingAvailabilitiesSyncOptionsMock.Object);;
+        _provider = new PlaytomicBookingProvider(httpClientFactoryMock.Object, serviceProviderMock.Object, playtomicOptionsMock.Object, courtBookingAvailabilitiesSyncOptionsMock.Object);;
     }
     
     [Fact]
