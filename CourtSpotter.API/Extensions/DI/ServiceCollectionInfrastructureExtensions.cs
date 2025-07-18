@@ -1,4 +1,5 @@
 ﻿using Azure.Monitor.OpenTelemetry.Exporter;
+using CourtSpotter.BackgroundServices.CourtBookingAvailabilitiesSync;
 using CourtSpotter.Core.Contracts;
 using CourtSpotter.Infrastructure.BookingProviders.Playtomic.Sync;
 using CourtSpotter.Infrastructure.DataAccess;
@@ -43,6 +44,7 @@ public static class ServiceCollectionInfrastructureExtensions
         services.AddScoped<IPadelClubsRepository, PadelClubsRepository>();
         services.AddScoped<IPlaytomicCourtsRepository, PlaytomicCourtsRepository>();
         services.AddScoped<IPlaytomicCourtsSyncManager, PlaytomicCourtsSyncManager>();
+        services.AddScoped<ICourtAvailabilitiesSyncOrchestrator, CourtAvailabilitiesSyncOrchestrator>();
         
         logging.ClearProviders();
 
