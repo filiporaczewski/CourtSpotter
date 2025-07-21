@@ -9,17 +9,17 @@ namespace CourtSpotter.Infrastructure.BookingProviders.KlubyOrg;
 public class KlubyOrgScheduleParser : IKlubyOrgScheduleParser
 {
     private readonly TimeProvider _timeProvider;
-    private readonly TimeZoneInfo _localTimeZone;
     private readonly string _baseUrl;
     private const int MinSlotsForOneHour = 2;
     private const int MinSlotsForOneAndHalfHours = 3;
     private const int MinSlotsForTwoHours = 4;
+    private readonly TimeZoneInfo _polishTimeZone;
 
     public KlubyOrgScheduleParser(TimeProvider timeProvider, IOptions<KlubyOrgProviderOptions> options)
     {
         _timeProvider = timeProvider;
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.LocalTimeZoneId);
         _baseUrl = options.Value.BaseUrl;
+        _polishTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
     }
     
     public async Task<KlubyOrgScheduleParserResult> ParseScheduleAsync(string htmlContent, DateTime date, PadelClub padelClub, string scheduleUrl, CancellationToken cancellationToken = default)
@@ -165,7 +165,7 @@ public class KlubyOrgScheduleParser : IKlubyOrgScheduleParser
         
         // Convert current UTC time to local time zone for filtering past slots
         var currentUtcTime = _timeProvider.GetUtcNow();
-        var currentLocalTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime.DateTime, _localTimeZone);
+        var currentLocalTime = TimeZoneInfo.ConvertTimeFromUtc(currentUtcTime.DateTime, _polishTimeZone);
 
         if (courtState.StartTime is null)
         {
@@ -221,7 +221,7 @@ public class KlubyOrgScheduleParser : IKlubyOrgScheduleParser
 
     private CourtAvailability GenerateCourtAvailability(PadelClub padelClub, DateTime startDate, int durationInMinutes, string courtName, string bookingUrl)
     {
-        var utcStartTime = TimeZoneInfo.ConvertTimeToUtc(startDate, _localTimeZone);
+        var utcStartTime = TimeZoneInfo.ConvertTimeToUtc(startDate, _polishTimeZone);
         var utcEndTime = utcStartTime.AddMinutes(durationInMinutes);
         
         return new CourtAvailability

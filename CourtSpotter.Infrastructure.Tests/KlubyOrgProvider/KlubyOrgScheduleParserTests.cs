@@ -9,7 +9,6 @@ namespace CourtSpotter.Infrastructure.Tests.KlubyOrgProvider;
 
 public class KlubyOrgScheduleParserTests
 {
-    private readonly FakeTimeProvider _fakeTimeProvider;
     private readonly KlubyOrgProviderOptions _options;
     private readonly KlubyOrgScheduleParser _parser;
     private readonly PadelClub _testClub;
@@ -18,23 +17,23 @@ public class KlubyOrgScheduleParserTests
 
     public KlubyOrgScheduleParserTests()
     {
-        _fakeTimeProvider = new FakeTimeProvider();
+        var fakeTimeProvider = new FakeTimeProvider();
         
         _options = new KlubyOrgProviderOptions
         {
-            BaseUrl = "https://kluby.org",
-            LocalTimeZoneId = "Central European Standard Time"
+            BaseUrl = "https://kluby.org"
         };
 
         var optionsMock = new Mock<IOptions<KlubyOrgProviderOptions>>();
         optionsMock.Setup(o => o.Value).Returns(_options);
 
-        _parser = new KlubyOrgScheduleParser(_fakeTimeProvider, optionsMock.Object);
+        _parser = new KlubyOrgScheduleParser(fakeTimeProvider, optionsMock.Object);
 
         _testClub = new PadelClub
         {
             ClubId = "test-club-id",
-            Name = "Test Club"
+            Name = "Test Club",
+            TimeZone = "Europe/Warsaw"
         };
 
         _testDate = new DateTime(2024, 1, 15, 0, 0, 0, DateTimeKind.Unspecified);
@@ -45,7 +44,7 @@ public class KlubyOrgScheduleParserTests
         var centralEuropeanTime = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
         var testDateTime = new DateTime(2024, 1, 15, 8, 0, 0, DateTimeKind.Unspecified);
         var testDateTimeOffset = new DateTimeOffset(testDateTime, centralEuropeanTime.GetUtcOffset(testDateTime));
-        _fakeTimeProvider.SetUtcNow(testDateTimeOffset.UtcDateTime);
+        fakeTimeProvider.SetUtcNow(testDateTimeOffset.UtcDateTime);
     }
     
     [Fact]

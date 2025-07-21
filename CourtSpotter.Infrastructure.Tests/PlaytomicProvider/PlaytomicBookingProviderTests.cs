@@ -35,9 +35,7 @@ public class PlaytomicBookingProviderTests
         
         var playtomicOptions = new PlaytomicProviderOptions
         {
-            ApiBaseUrl = "https://playtomic.com",
-            LocalTimeZoneId = "UTC",
-            ApiTimeZoneId = "UTC"
+            ApiBaseUrl = "https://playtomic.com"
         };
         
         var playtomicOptionsMock = new Mock<IOptions<PlaytomicProviderOptions>>();
@@ -356,9 +354,9 @@ public class PlaytomicBookingProviderTests
         result.CourtAvailabilities.ShouldAllBe(a => a.ClubId == padelClub.ClubId);
         result.CourtAvailabilities.ShouldAllBe(a => a.ClubName == padelClub.Name);
         result.CourtAvailabilities.ShouldAllBe(a => a.Provider == ProviderType.Playtomic);
-
-        result.CourtAvailabilities.ShouldAllBe(a => a.StartTime.Hour >= 6);
-        result.CourtAvailabilities.ShouldAllBe(a => a.StartTime.Hour <= 22);
+        
+        result.CourtAvailabilities.ShouldAllBe(a => ConvertToPadelClubTimeZone(a.StartTime, padelClub.TimeZone).Hour >= 6);
+        result.CourtAvailabilities.ShouldAllBe(a => ConvertToPadelClubTimeZone(a.StartTime, padelClub.TimeZone).Hour <= 22);
         
         var indoorCourts = result.CourtAvailabilities.Where(a => a.CourtName == "Indoor Court 1");
         var outdoorCourts = result.CourtAvailabilities.Where(a => a.CourtName == "Outdoor Court 2");
@@ -476,5 +474,11 @@ public class PlaytomicBookingProviderTests
                 ItExpr.Is<HttpRequestMessage>(req => req.RequestUri != null && req.RequestUri.ToString() == expectedUrl),
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(httpResponseMessage);
+    }
+    
+    private static DateTime ConvertToPadelClubTimeZone(DateTime dateTime, string timeZoneId)
+    {
+        var padelClubTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        return TimeZoneInfo.ConvertTime(dateTime, padelClubTimeZone);
     }
 }
