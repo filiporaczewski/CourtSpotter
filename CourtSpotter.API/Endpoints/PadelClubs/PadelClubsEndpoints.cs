@@ -59,7 +59,7 @@ public static class PadelClubsEndpoints
             clubId = Guid.NewGuid().ToString();
         }
         
-        var newClub = PadelClub.Create(clubId, command.Name, command.Provider, command.PagesCount);;
+        var newClub = PadelClub.Create(clubId, command.Name, command.Provider, command.TimeZone, command.PagesCount);;
         await padelClubsRepository.AddPadelClub(newClub, command.Provider, cancellationToken);
         
         return Results.Ok(new
@@ -77,7 +77,8 @@ public static class PadelClubsEndpoints
             ClubId = c.ClubId,
             Name = c.Name,
             Provider = c.Provider.ToDisplayName(),
-            PagesCount = c.PagesCount    
+            PagesCount = c.PagesCount,
+            TimeZone = c.TimeZone
         }).ToList();
 
         return Results.Ok(new

@@ -13,7 +13,6 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
 {
     private readonly HttpClient _httpClient;
     private readonly IServiceProvider _serviceProvider;
-    private readonly TimeZoneInfo _localTimeZone;
     private readonly int _earliestPossibleBookingHour;
     private readonly int _latestPossibleBookingHour;
     private readonly string _baseUrl;
@@ -22,7 +21,6 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
     {
         _httpClient = httpClientFactory.CreateClient("PlaytomicClient");
         _serviceProvider = serviceProvider;
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(playtomicOptions.Value.LocalTimeZoneId);
         _earliestPossibleBookingHour = syncOptions.Value.EarliestBookingHour;
         _latestPossibleBookingHour = syncOptions.Value.LatestBookingHour;
         _baseUrl = playtomicOptions.Value.ApiBaseUrl;
@@ -101,7 +99,9 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
                     continue;
                 }
                 
-                var filteredSlots = tenantAvailability.Slots.Where(slot => IsValidTimeSlot(slot, date)).ToList();
+                var padelClubTimeZone = TimeZoneInfo.FindSystemTimeZoneById(padelClub.TimeZone);
+                
+                var filteredSlots = tenantAvailability.Slots.Where(slot => IsValidTimeSlot(slot, date, padelClubTimeZone)).ToList();
 
                 foreach (var slot in filteredSlots)
                 {
@@ -156,7 +156,7 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
 
     }
     
-    private bool IsValidTimeSlot(TimeSlot slot, DateTime date)
+    private bool IsValidTimeSlot(TimeSlot slot, DateTime date, TimeZoneInfo timeZone)
     {
         var (startDateTime, _) = ParseSlotTimes(slot, date);
     
@@ -164,10 +164,10 @@ public class PlaytomicBookingProvider : ICourtBookingProvider
         {
             return false;
         }
-    
-        // Convert UTC time to local time zone for filtering based on local business hours
-        var localStartTime = TimeZoneInfo.ConvertTimeFromUtc(startDateTime.Value, _localTimeZone);
-        var hour = localStartTime.Hour;
+        
+        var timeInPadelClubTimeZone = TimeZoneInfo.ConvertTimeFromUtc(startDateTime.Value, timeZone);
+        var hour = timeInPadelClubTimeZone.Hour;
+        
         return hour >= _earliestPossibleBookingHour && hour <= _latestPossibleBookingHour;
     }
 
